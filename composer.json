@@ -1,0 +1,36 @@
+{
+    "name": "particle-academy/fancy-cms",
+    "description": "Laravel host for fancy-cms — the PHP page renderer (node tree → HTML + compiled CSS + island placeholders), persistence, file API on any disk, and publish routing. The PHP half of the dual-emitter pair with @particle-academy/fancy-cms-ui.",
+    "type": "library",
+    "license": "MIT",
+    "keywords": ["cms", "laravel", "inertia", "website-builder", "fancy", "human-plus"],
+    "require": {
+        "php": "^8.2",
+        "illuminate/support": "^11.0 || ^12.0 || ^13.0"
+    },
+    "require-dev": {
+        "phpunit/phpunit": "^11.0 || ^12.0"
+    },
+    "autoload": {
+        "psr-4": {
+            "FancyCms\\": "src/"
+        }
+    },
+    "autoload-dev": {
+        "psr-4": {
+            "FancyCms\\Tests\\": "tests/"
+        }
+    },
+    "extra": {
+        "laravel": {
+            "providers": [
+                "FancyCms\\FancyCmsServiceProvider"
+            ]
+        }
+    },
+    "config": {
+        "sort-packages": true
+    },
+    "minimum-stability": "stable",
+    "prefer-stable": true
+}
