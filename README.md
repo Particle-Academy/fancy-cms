@@ -1,5 +1,7 @@
 # particle-academy/fancy-cms
 
+[![Fancified](art/fancified.svg)](https://particle.academy)
+
 The Laravel host for **fancy-cms** — an extendable inline-WYSIWYG website +
 app-shell builder built on the Fancy UI suite. This package owns the **PHP
 renderer** (node tree → HTML + compiled CSS + island placeholders), and — in
