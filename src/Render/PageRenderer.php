@@ -39,6 +39,9 @@ final class PageRenderer
             return '';
         }
         $attr = ' data-cms="'.htmlspecialchars($id, ENT_QUOTES).'"';
+        if (! empty($node['className']) && is_string($node['className'])) {
+            $attr .= ' class="'.htmlspecialchars($node['className'], ENT_QUOTES).'"';
+        }
 
         // Interactive / 3rd-party addons → sized placeholder, hydrated client-side.
         if (! empty($node['island'])) {
