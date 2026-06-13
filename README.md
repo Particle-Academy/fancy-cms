@@ -32,3 +32,9 @@ php bin/emit-css.php path/to/doc.json   # emit CSS for a Stages document
 - **Human+ is opt-in** — core works with no websockets or agents.
 
 MIT © Particle Academy
+
+---
+
+## ⭐ Star Fancy UI
+
+If this package is useful to you, a quick ⭐ on the repo really helps us build a better kit. Thank you!
