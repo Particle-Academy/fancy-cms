@@ -2,6 +2,12 @@
 
 [![Fancified](art/fancified.svg)](https://particle.academy)
 
+> ⚠️ **Early-release BETA.** This package is young and moving fast — expect
+> rough edges, gaps, and breaking changes between 0.x releases. If you hit
+> anything odd (bugs, missing pieces, confusing docs), please report it at
+> [github.com/Particle-Academy/fancy-cms/issues](https://github.com/Particle-Academy/fancy-cms/issues)
+> — every discovery helps.
+
 The Laravel host for **fancy-cms** — an extendable inline-WYSIWYG website +
 app-shell builder built on the Fancy UI suite. This package owns the **PHP
 renderer** (node tree → HTML + compiled CSS + island placeholders), and — in
