@@ -19,7 +19,7 @@ later phases — persistence, the file API on any disk, and publish routing.
 > (`fancy-cms-ui/parity`). `PageRenderer` is a skeleton; persistence + routing
 > land in Phase 1.
 
-Architecture & plan: `fancy-ui/docs/fancy-cms.md`.
+Architecture & plan: `.ai/plans/fancy-cms.md` in the [fancy.agi envelope](https://github.com/Particle-Academy).
 
 ## Why two emitters
 
