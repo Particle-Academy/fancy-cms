@@ -15,6 +15,8 @@ upgrading.
 
 ## [Unreleased]
 
+## 0.3.0 — 2026-08-09
+
 ### Fixed
 
 - **`PageRenderer` renders documents written by `@particle-academy/fancy-cms-ui`
