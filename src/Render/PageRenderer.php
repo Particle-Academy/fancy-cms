@@ -22,11 +22,52 @@ final class PageRenderer
     public static function render(array $doc, array $data = []): array
     {
         $html = '';
-        foreach (($doc['sections'] ?? []) as $id) {
-            $html .= self::renderNode($doc, (string) $id);
+        foreach (self::roots($doc) as $id) {
+            $html .= self::renderNode($doc, $id);
         }
 
         return ['html' => $html, 'css' => CssEmitter::emit($doc)];
+    }
+
+    /**
+     * The top-level node ids, in order — for BOTH document shapes.
+     *
+     * `@particle-academy/fancy-cms-ui` used to carry top-level order in its own
+     * `sections: string[]` array while every other level used fractional `order`
+     * keys. It now orders roots like any other sibling group, and drops the
+     * array. This renderer has to read documents written on either side of that
+     * change, because a host upgrades its PHP and its JS at different moments.
+     *
+     * The two shapes are distinguished by presence, not by a version field, and
+     * **`sections` wins wherever it exists**. That is not a stylistic
+     * preference: the old `reorder_sections` op permuted the array and left
+     * every node's `order` key untouched, so on a page whose sections were ever
+     * rearranged, the keys are stale and the array is the only record of the
+     * real order. Preferring the keys there would render a live page in the
+     * order it was first authored in — silently, with nothing thrown.
+     *
+     * @param  array<string,mixed>  $doc
+     * @return list<string>
+     */
+    private static function roots(array $doc): array
+    {
+        $sections = $doc['sections'] ?? null;
+
+        if (is_array($sections)) {
+            $ids = [];
+            foreach ($sections as $id) {
+                $id = (string) $id;
+                // A dangling id is a stale write; skip it rather than emitting
+                // an empty node for it.
+                if (isset($doc['nodes'][$id])) {
+                    $ids[] = $id;
+                }
+            }
+
+            return $ids;
+        }
+
+        return self::childrenOf($doc, null);
     }
 
     /**
@@ -69,7 +110,7 @@ final class PageRenderer
      * @param  array<string,mixed>  $doc
      * @return list<string>
      */
-    private static function childrenOf(array $doc, string $parent): array
+    private static function childrenOf(array $doc, ?string $parent): array
     {
         $kids = [];
         foreach (($doc['nodes'] ?? []) as $cid => $n) {

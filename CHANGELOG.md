@@ -15,6 +15,38 @@ upgrading.
 
 ## [Unreleased]
 
+### Fixed
+
+- **`PageRenderer` renders documents written by `@particle-academy/fancy-cms-ui`
+  after it dropped `sections[]`.** That release orders top-level nodes by their
+  fractional `order` key like any other sibling group; this renderer only ever
+  read `$doc['sections']`, so a current-shape document rendered as an **empty
+  page** — no error, no warning, just nothing.
+
+  Both shapes are now read, distinguished by presence rather than a version
+  field, because a host upgrades its PHP and its JS at different moments and has
+  to serve both in between.
+
+  Where `sections` exists it **wins over the order keys**, which is the subtle
+  half: the old JS `reorder_sections` op permuted the array and left every
+  node's `order` key untouched, so on a page whose sections were ever
+  rearranged the keys are stale and the array is the only record of the real
+  order. Preferring the keys there would have rendered a live page in the order
+  it was first authored in.
+
+  An empty `sections: []` is treated as the legacy shape — "this document has no
+  sections" — not as the new shape, so removed roots stay removed.
+
+### Added
+
+- A test suite. This package had no `tests/` directory, no `composer test`
+  script, and no CI, so the renderer's behaviour was never executed anywhere —
+  which is how the blank-page break above could have shipped unnoticed. 11 tests
+  now cover both document shapes, nested ordering, island placeholders, stable
+  `data-cms` handles, and escaping of author content and node ids.
+- `composer test`, a `phpunit.xml`, and a `Tests` workflow on push + PR, matching
+  the CI standard used across the suite's PHP packages.
+
 ## 0.2.0 — 2026-08-07
 
 ### Changed
