@@ -50,5 +50,16 @@ jobs:
       - name: Install dependencies
         run: composer update --prefer-dist --no-interaction --no-progress
 
+      - name: Fetch the canonical UI agent guide
+        uses: actions/checkout@v7
+        with:
+          repository: Particle-Academy/fancy-cms-ui
+          path: .guide-mirror
+          sparse-checkout: agent-guide/professional-pages.md
+          sparse-checkout-cone-mode: false
+          persist-credentials: false
+
       - name: Run tests
+        env:
+          FANCY_CMS_GUIDE_MIRROR: .guide-mirror/agent-guide/professional-pages.md
         run: vendor/bin/phpunit --colors=always

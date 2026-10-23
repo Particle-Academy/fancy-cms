@@ -13,24 +13,114 @@ app-shell builder built on the Fancy UI suite. This package owns the **PHP
 renderer** (node tree → HTML + compiled CSS + island placeholders), and — in
 later phases — persistence, the file API on any disk, and publish routing.
 
-> **Status: document spine + static rendering.** Ships validated PageDocs and
+> **Status: agent surface + document spine + static rendering.** Ships the
+> agent guide/catalogue, revision-aware page sessions, validated PageDocs and
 > PageOps, the PHP reducer/inverses, semantic HTML and the PHP CSS emitter.
 > Reducer and CSS parity are checked against `@particle-academy/fancy-cms-ui`
-> 0.8. Storage, authorization, revision transactions and broadcasting belong
+> 0.9. Storage, authorization, revision transactions and broadcasting belong
 > to the host application.
 
 Architecture & plan: `.ai/plans/fancy-cms.md` in the [fancy.agi envelope](https://github.com/Particle-Academy).
 
 ## Why two emitters
 
-The editor (JS) and the published site (PHP) must produce identical CSS from the
-same document — "what you build" === "what ships". The two emitters are kept
+The editor (JS) and the published site (PHP) must produce identical CSS and
+native static HTML from the same document. The two renderers are kept
 honest by a cross-engine parity harness, the same discipline used for
 dark-slide / holy-sheet (PHP ≡ Node).
 
 ```bash
 php bin/emit-css.php path/to/doc.json   # emit CSS for a Stages document
 ```
+
+## Give an agent the package contract
+
+```php
+use FancyCms\Agent;
+
+$systemPrompt = Agent::guide();
+$catalogueJson = json_encode(Agent::describe(), JSON_THROW_ON_ERROR);
+```
+
+The guide ships in `agent-guide/professional-pages.md`, byte-identical to the
+canonical fancy-cms-ui guide. Tests pin its SHA-256 and compare the sibling
+copy when present; CI also checks out the UI guide and compares the bytes.
+Change both copies and the pin together. The guide describes host tool names
+(`cms_describe`, `cms_apply`, `cms_get`, `cms_changes_since`, `cms_finish`);
+the host registers those tools and calls this package's public APIs.
+
+`describe()` returns a compact PHP array for JSON serialization, with the
+thirteen operation argument shapes, element props, style units/keywords and
+breakpoint widths. Its documented shorthand is **not JSON Schema**; use
+`PageDoc`/`PageOp` for validation. Every op includes `t` set to its catalogue
+key. Lengths are objects such as `{"value":24,"unit":"px"}`, not bare numbers.
+`richtext` is excluded from the agent catalogue because its browser renderer
+accepts host-authored HTML. Restrict the host's known types or sanitize before
+rendering untrusted HTML. Browser-only behavior is identified in the catalogue.
+
+## Edit a page with two writers
+
+```php
+use FancyCms\Document\PageDoc;
+use FancyCms\PageSession;
+
+// The host chooses the registry; an untrusted builder can exclude richtext.
+$types = array_values(array_diff(PageDoc::NODE_TYPES, ['richtext']));
+$session = new PageSession($doc, $types);
+$read = $session->get(); // ['doc' => PageDoc, 'revision' => opaque string]
+
+$result = $session->apply([
+    ['t' => 'set_node_props', 'id' => 'hero', 'patch' => ['content' => 'Hello']],
+], actor: 'agent', basedOn: $read['revision']);
+
+$changes = $session->changesSince($read['revision']);
+// ['revision' => '...', 'complete' => true, 'changes' => [
+//   ['handle' => 'node:hero', 'change' => 'updated', 'actor' => 'agent'],
+// ]]
+
+$storedState = $session->toJson();
+$restored = PageSession::fromJson($storedState, $types);
+```
+
+`apply()` validates every operation and resulting document through
+`PageDoc::apply`. A batch commits together: any failure preserves the document,
+op log and revision. Each accepted op gets an opaque revision and a trusted
+host-supplied `agent` or `human` actor; do not let model arguments choose their
+own actor. `opLog()` returns detached `{op, actor, revision}` rows. An empty
+batch leaves the revision unchanged. Supplying a stale `basedOn` refuses the
+whole batch with `surface_changed_under_you`; omitting it is an unconditional
+write, so agent tool adapters should require the revision they observed.
+
+`PageSessionException::getErrorCode()` returns the string refusal code,
+`getErrors()` returns rows with `index` (zero-based op index, or null), `path`,
+`expected`, `got` and `hint`, and `getRevision()` returns the current revision.
+Codes are `invalid_request`, `invalid_operation`, `surface_changed_under_you`,
+`unknown_revision`, `invalid_state`, `history_limit` and `state_limit`.
+
+The change feed uses the shape consumed by prism-human-plus. It retains every
+event in order, including removed descendants and transient changes, without
+coalescing away a human's edit. Handles are `node:<id>` for nodes and
+`page:<doc.id>` for metadata/theme; id components are URL-encoded with
+`rawurlencode` so whitespace, colons and Unicode survive consumer parsing.
+Decode the component with `rawurldecode` when constructing an op; these handles
+are not raw node ids. Changes are `created`, `updated`, `deleted`
+or `moved`. A known current cursor returns a complete empty feed. An unknown
+cursor raises `unknown_revision`, never a misleading empty answer. An agent
+must read and respect the human-attributed events after a conflict.
+
+**The host still owns persistence concurrency.** Lock the stored session or
+use a compare-and-swap transaction across load → apply → save. Two separate
+instances loaded from the same saved state cannot see each other's writes
+without that host transaction. Authentication, actor provenance, authorization,
+storage and broadcasts remain host responsibilities. This class makes no
+network calls and cannot authenticate stored history.
+
+State format version 1 stores the initial document and each operation as JSON
+strings inside its JSON envelope, preserving object/list/numeric-map tags.
+Restore validates and replays the complete history; cursors and actors survive.
+It accepts at most 1,000 ops per batch, 10,000 retained ops and 32 MiB of encoded
+state. Over-limit writes fail atomically. History is never silently pruned;
+starting a new session invalidates old cursors. Keep state in trusted storage.
 
 ## Apply an edit on the server
 
@@ -105,6 +195,16 @@ links/buttons use safe anchors, lists use ul/ol, and containers accept the
 allowlisted landmark in `props.as`. Labels and list items are escaped. Images
 carry alt text, object-fit and lazy/eager loading. Bindings resolve only the
 supplied data context. Browser runtimes handle motion, actions and repeaters.
+PHP does not emit `richtext` HTML; the agent catalogue excludes it.
+
+The 0.9 base stylesheet emits first, before tokens and per-node rules. It
+resets semantic-element margins and supplies scoped button/callout/code/image
+styles. Include the returned CSS when serving the HTML. Button/callout variant
+and image-fit attributes use allowlists; native leaves use the same markup and
+escaping as React's static renderer. Valid `props.anchor` slugs become `id`.
+Eager images add a deduplicated SSR preload hint; lazy and data images do not.
+Missing legacy `props`/`style.base` fields get empty rendering defaults; strict
+document validation still requires the authored document shape.
 
 The CSS emitter mirrors responsive stack/grid behavior, visibility, theme
 tokens and 0.8 style properties. It escapes ids for quoted selectors and
@@ -121,6 +221,7 @@ cd ../fancy-cms-ui
 npm run build
 node parity/run-ops.mjs
 node parity/run.mjs
+node parity/html.mjs
 ```
 
 The operation harness compares every intermediate document, invalid-operation
@@ -129,6 +230,10 @@ keys. Only JSON object-key order is canonicalized. Hand-written edge cases and
 the committed seed `0x5eedc0de` cover 28 sequences, 1,090 intermediate states
 and 520 key cases, plus 14,200 number-format cases. The CSS harness requires byte-identical output for all
 canonical documents, including hostile input and JSON/number-format fixtures.
+The HTML runner compares `renderToStaticMarkup(CmsPage)` with
+`php bin/render-html.php <doc.json>` without styles or an added newline. All
+five canonical pages, including the premium reference, must match byte for
+byte in both CSS and HTML; these corpora cover the supported native subset.
 
 ## Principles
 

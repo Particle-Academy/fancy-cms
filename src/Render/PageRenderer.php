@@ -24,11 +24,16 @@ final class PageRenderer
     public static function render(array $doc, array $data = []): array
     {
         $html = '';
+        $preloads = [];
         foreach (self::roots($doc) as $id) {
-            $html .= self::renderNode($doc, $id, $data);
+            $html .= self::renderNode($doc, $id, $data, $preloads);
+        }
+        $hints = '';
+        foreach (array_keys($preloads) as $src) {
+            $hints .= '<link rel="preload" as="image" href="'.self::escape((string) $src).'"/>';
         }
 
-        return ['html' => $html, 'css' => CssEmitter::emit($doc)];
+        return ['html' => $hints.$html, 'css' => CssEmitter::emit($doc)];
     }
 
     /**
@@ -75,31 +80,31 @@ final class PageRenderer
     /**
      * @param  array<string,mixed>  $doc
      */
-    private static function renderNode(array $doc, string $id, array $data = []): string
+    private static function renderNode(array $doc, string $id, array $data, array &$preloads): string
     {
         $node = $doc['nodes'][$id] ?? null;
         if ($node === null) {
             return '';
         }
-        $attr = ' data-cms="'.htmlspecialchars($id, ENT_QUOTES).'"';
-        if (! empty($node['className']) && is_string($node['className'])) {
-            $attr .= ' class="'.htmlspecialchars($node['className'], ENT_QUOTES).'"';
-        }
-
-        // Interactive / 3rd-party addons → sized placeholder, hydrated client-side.
+        $attr = ' data-cms="'.self::escape($node['id'] ?? $id).'"';
         if (! empty($node['island'])) {
-            $type = htmlspecialchars((string) ($node['type'] ?? ''), ENT_QUOTES);
-
-            return "<div{$attr} data-cms-island=\"{$type}\"></div>";
+            $attr .= ' data-cms-island="'.self::escape((string) ($node['type'] ?? '')).'"';
         }
-
-        $props = $node['props'] ?? [];
+        if (is_string($node['className'] ?? null)) {
+            $attr .= ' class="'.self::escape($node['className']).'"';
+        }
+        $props = is_array($node['props'] ?? null) ? $node['props'] : [];
+        $node['props'] = $props;
         $text = static fn ($value): string => JsValue::text(self::resolve($value, $data));
         [$tag, $attrs] = self::elementFor($node, $text);
-        foreach ($attrs as $key => $value) {
-            $attr .= ' '.$key.'="'.htmlspecialchars($value, ENT_QUOTES | ENT_SUBSTITUTE, 'UTF-8').'"';
+        $anchor = $text($props['anchor'] ?? null);
+        if (preg_match('/\A[a-z][a-z0-9-]{0,63}\z/', $anchor) === 1) {
+            $attr .= ' id="'.$anchor.'"';
         }
-        $escape = static fn (string $value): string => htmlspecialchars($value, ENT_QUOTES | ENT_SUBSTITUTE, 'UTF-8');
+        foreach ($attrs as $key => $value) {
+            $attr .= ' '.$key.'="'.self::escape($value).'"';
+        }
+        $escape = self::escape(...);
         $type = $node['type'] ?? '';
         $inner = '';
         if ($type === 'text' || $type === 'heading' || $type === 'link') {
@@ -126,17 +131,38 @@ final class PageRenderer
             }
         } elseif ($type === 'image') {
             $fit = $text($props['fit'] ?? null);
-            if (! in_array($fit, ['cover', 'contain', 'fill', 'none', 'scale-down'], true)) {
-                $fit = 'cover';
+            $src = $text($props['src'] ?? null);
+            // Match the native SSR resource hint for eager non-data images.
+            // This collection is per render, so neither duplicate nodes nor
+            // later pages can accumulate another page's resource hints.
+            if ($src !== '' && $text($props['loading'] ?? null) === 'eager' && ! preg_match('/^data:/i', $src)) {
+                $preloads[$src] = true;
             }
-            $inner = '<img src="'.$escape($text($props['src'] ?? null)).'" alt="'.$escape($text($props['alt'] ?? null)).'" loading="'.($text($props['loading'] ?? null) === 'eager' ? 'eager' : 'lazy').'" style="width:100%;height:100%;object-fit:'.$fit.';display:block">';
-        } else {
+            $inner = '<img'.($src === '' ? '' : ' src="'.$escape($src).'"').' alt="'.$escape($text($props['alt'] ?? null)).'" loading="'.($text($props['loading'] ?? null) === 'eager' ? 'eager' : 'lazy').'"';
+            if (in_array($fit, ['contain', 'fill', 'none', 'scale-down'], true)) {
+                $inner .= ' data-cms-fit="'.$fit.'"';
+            }
+            $inner .= '/>';
+        } elseif ($type === 'divider') {
+            $inner = '<hr/>';
+        } elseif ($type === 'code') {
+            $inner = '<pre><code>'.$escape($text($props['content'] ?? null)).'</code></pre>';
+        } elseif ($type === 'callout') {
+            $content = $text($props['content'] ?? null);
+            $inner = $escape($content === '' ? 'Callout' : $content);
+        } elseif (empty($node['island']) || in_array($type, ['section', 'stack', 'grid', 'frame', 'shape', 'card'], true)) {
             foreach (self::childrenOf($doc, $id) as $childId) {
-                $inner .= self::renderNode($doc, $childId, $data);
+                $inner .= self::renderNode($doc, $childId, $data, $preloads);
             }
         }
 
         return '<'.$tag.$attr.'>'.$inner.'</'.$tag.'>';
+    }
+
+    /** React's static HTML escaping, including its apostrophe spelling. */
+    private static function escape(string $value): string
+    {
+        return str_replace('&#039;', '&#x27;', htmlspecialchars($value, ENT_QUOTES | ENT_SUBSTITUTE, 'UTF-8'));
     }
 
     /** The PHP twin of registry.tsx elementFor; all tags and attrs are fixed. */
@@ -172,15 +198,21 @@ final class PageRenderer
         }
         if ($type === 'button' || $type === 'link') {
             $href = self::safeHref($text($props['href'] ?? null));
-            if ($href === null) {
-                return [$type === 'link' ? 'span' : 'div', []];
-            }
-            $attrs = ['href' => $href];
-            if (preg_match('~^https?://~i', $href)) {
+            $attrs = $href === null ? [] : ['href' => $href];
+            if ($href !== null && preg_match('~^https?://~i', $href)) {
                 $attrs['rel'] = 'noopener noreferrer';
             }
+            if ($type === 'button') {
+                $variant = $text($props['variant'] ?? null);
+                $attrs['data-cms-button'] = in_array($variant, ['primary', 'outline', 'ghost'], true) ? $variant : 'primary';
+            }
 
-            return ['a', $attrs];
+            return [$href !== null ? 'a' : ($type === 'link' ? 'span' : 'div'), $attrs];
+        }
+        if ($type === 'callout') {
+            $variant = $text($props['variant'] ?? null);
+
+            return ['div', ['data-cms-callout' => in_array($variant, ['info', 'success', 'warning', 'danger'], true) ? $variant : 'info']];
         }
 
         return [in_array($type, ['stack', 'grid', 'frame', 'shape', 'card'], true) && in_array($as, $landmarks, true) ? $as : 'div', []];

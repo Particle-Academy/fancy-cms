@@ -10,6 +10,28 @@ use stdClass;
 /** Pure PHP twin of fancy-cms-ui/src/render/css.ts; canonical parity is the gate. */
 final class CssEmitter
 {
+    /** Fixed first-party UI 0.9 preamble; LF bytes are platform-independent. */
+    public const BASE_CSS = "/* fancy-cms base */\n\n".
+        ":where([data-cms]) {\n  box-sizing: border-box;\n}\n\n".
+        ":where(h1, h2, h3, h4, h5, h6, p, ul, ol)[data-cms] {\n  margin: 0;\n}\n\n".
+        ":where(ul, ol)[data-cms] {\n  padding-left: 1.25em;\n}\n\n".
+        ":where(a[data-cms]) {\n  color: inherit;\n}\n\n".
+        ":where([data-cms] > img) {\n  display: block;\n  height: 100%;\n  object-fit: cover;\n  width: 100%;\n}\n\n".
+        ":where([data-cms] > img[data-cms-fit=\"contain\"]) {\n  object-fit: contain;\n}\n\n".
+        ":where([data-cms] > img[data-cms-fit=\"fill\"]) {\n  object-fit: fill;\n}\n\n".
+        ":where([data-cms] > img[data-cms-fit=\"none\"]) {\n  object-fit: none;\n}\n\n".
+        ":where([data-cms] > img[data-cms-fit=\"scale-down\"]) {\n  object-fit: scale-down;\n}\n\n".
+        ":where([data-cms-button]) {\n  align-items: center;\n  border: 1px solid var(--cms-color-primary, #7c3aed);\n  border-radius: 8px;\n  cursor: pointer;\n  display: inline-flex;\n  font-weight: 600;\n  gap: 6px;\n  justify-content: center;\n  line-height: 1.2;\n  padding: 10px 18px;\n  text-decoration: none;\n}\n\n".
+        ":where([data-cms-button=\"primary\"]) {\n  background: var(--cms-color-primary, #7c3aed);\n  color: #ffffff;\n}\n\n".
+        ":where([data-cms-button=\"outline\"]) {\n  background: transparent;\n  color: var(--cms-color-primary, #7c3aed);\n}\n\n".
+        ":where([data-cms-button=\"ghost\"]) {\n  background: transparent;\n  border-color: currentColor;\n  color: inherit;\n}\n\n".
+        ":where([data-cms-callout]) {\n  background: #3b82f614;\n  border-left: 3px solid #3b82f6;\n  border-radius: 10px;\n  padding: 12px 14px;\n}\n\n".
+        ":where([data-cms-callout=\"success\"]) {\n  background: #10b98114;\n  border-left-color: #10b981;\n}\n\n".
+        ":where([data-cms-callout=\"warning\"]) {\n  background: #f59e0b14;\n  border-left-color: #f59e0b;\n}\n\n".
+        ":where([data-cms-callout=\"danger\"]) {\n  background: #ef444414;\n  border-left-color: #ef4444;\n}\n\n".
+        ":where([data-cms] > hr) {\n  border: none;\n  border-top: 1px solid #e2e8f0;\n  margin: 0;\n}\n\n".
+        ":where([data-cms] > pre) {\n  background: #0b1220;\n  border-radius: 10px;\n  color: #e2e8f0;\n  font-family: ui-monospace, monospace;\n  font-size: 13px;\n  margin: 0;\n  overflow-x: auto;\n  padding: 12px 14px;\n}";
+
     private const BREAKPOINTS = ['base' => 0, 'md' => 768, 'lg' => 1024];
 
     private const ALIGN = ['start' => 'flex-start', 'center' => 'center', 'end' => 'flex-end', 'stretch' => 'stretch'];
@@ -31,12 +53,17 @@ final class CssEmitter
         usort($ids, static fn ($a, $b): int => Ordering::compare((string) $a, (string) $b));
         foreach ($ids as $id) {
             $node = $nodes[$id];
+            if (! is_array($node)) {
+                continue;
+            }
+            $node['style'] = is_array($node['style'] ?? null) ? $node['style'] : [];
+            $node['style']['base'] = is_array($node['style']['base'] ?? null) ? $node['style']['base'] : [];
             $selector = self::selectorFor((string) $id);
             $parentFree = self::isParentFree($doc, $node);
             $style = $node['style']['base'] ?? [];
             $base = array_replace(
                 self::containerDecls($node, $style, true),
-                isset($node['constraints']['base']) ? self::constraintDecls($node['constraints']['base'], $parentFree) : [],
+                is_array($node['constraints']['base'] ?? null) ? self::constraintDecls($node['constraints']['base'], $parentFree) : [],
                 self::styleDecls($style),
                 self::visibilityDecls($node, $style, true),
             );
@@ -48,10 +75,10 @@ final class CssEmitter
                 if ($bp === 'base' || ! array_key_exists($bp, self::BREAKPOINTS)) {
                     continue;
                 }
-                $style = $node['style'][$bp] ?? null;
+                $style = is_array($node['style'][$bp] ?? null) ? $node['style'][$bp] : null;
                 $decls = array_replace(
                     $style !== null ? self::containerDecls($node, $style, false) : [],
-                    isset($node['constraints'][$bp]) ? self::constraintDecls($node['constraints'][$bp], $parentFree) : [],
+                    is_array($node['constraints'][$bp] ?? null) ? self::constraintDecls($node['constraints'][$bp], $parentFree) : [],
                     $style !== null ? self::styleDecls($style) : [],
                     $style !== null ? self::visibilityDecls($node, $style, false) : [],
                 );
@@ -62,7 +89,11 @@ final class CssEmitter
             }
         }
 
-        return implode("\n\n", $blocks).($blocks !== [] ? "\n" : '');
+        if ($blocks === [] && $nodes === []) {
+            return '';
+        }
+
+        return implode("\n\n", [self::BASE_CSS, ...$blocks])."\n";
     }
 
     private static function selectorFor(string $id): string

@@ -53,12 +53,12 @@ final class SemanticRendererTest extends TestCase
     public function test_unsafe_href_schemes_never_become_anchors(string $href): void
     {
         self::assertSame('<span data-cms="a">Go</span>', $this->html('link', ['href' => $href, 'content' => 'Go']));
-        self::assertSame('<div data-cms="a">Go</div>', $this->html('button', ['href' => $href, 'label' => 'Go']));
+        self::assertSame('<div data-cms="a" data-cms-button="primary">Go</div>', $this->html('button', ['href' => $href, 'label' => 'Go']));
     }
 
     public function test_safe_links_and_landmarks_match_the_registry(): void
     {
-        self::assertSame('<a data-cms="a" href="https://example.test/a?x=1&amp;y=2" rel="noopener noreferrer">Go</a>', $this->html('button', ['href' => ' https://example.test/a?x=1&y=2 ', 'label' => 'Go']));
+        self::assertSame('<a data-cms="a" href="https://example.test/a?x=1&amp;y=2" rel="noopener noreferrer" data-cms-button="primary">Go</a>', $this->html('button', ['href' => ' https://example.test/a?x=1&y=2 ', 'label' => 'Go']));
         self::assertSame('<a data-cms="a" href="#next">Next</a>', $this->html('link', ['href' => '#next', 'content' => 'Next']));
         self::assertSame('<header data-cms="a"></header>', $this->html('stack', ['as' => 'header']));
         self::assertSame('<main data-cms="a"></main>', $this->html('section', ['as' => 'main']));
@@ -71,9 +71,10 @@ final class SemanticRendererTest extends TestCase
         $html = $this->html('image', ['src' => '/photo.png?x=1&y=2', 'alt' => '<photo>', 'fit' => 'contain', 'loading' => 'eager']);
         self::assertStringContainsString('src="/photo.png?x=1&amp;y=2"', $html);
         self::assertStringContainsString('alt="&lt;photo&gt;"', $html);
-        self::assertStringContainsString('object-fit:contain;', $html);
+        self::assertStringContainsString('data-cms-fit="contain"', $html);
         self::assertStringContainsString('loading="eager"', $html);
-        self::assertStringContainsString('object-fit:cover;', $this->html('image', ['fit' => 'cover; color:red']));
+        self::assertStringNotContainsString('data-cms-fit=', $this->html('image', ['fit' => 'cover; color:red']));
+        self::assertStringNotContainsString('style=', $html);
     }
 
     public function test_semantic_properties_and_content_resolve_only_supplied_data(): void
@@ -84,5 +85,16 @@ final class SemanticRendererTest extends TestCase
         $node['props'] = ['level' => ['$bind' => 'article.level'], 'content' => ['$bind' => 'article.title']];
         $doc['nodes'] = ['a' => $node];
         self::assertSame('<h1 data-cms="a">&lt;Head&gt;</h1>', PageRenderer::render($doc, ['article' => ['level' => 1, 'title' => '<Head>']])['html']);
+    }
+
+    public function test_in_page_anchor_uses_the_ui_slug_allowlist_and_binding_context(): void
+    {
+        self::assertSame('<section data-cms="a" id="pricing"></section>', $this->html('section', ['anchor' => 'pricing']));
+        foreach (['Bad', '1bad', 'bad space', 'x" onclick="run', str_repeat('a', 65), "good\n"] as $bad) {
+            self::assertStringNotContainsString(' id=', $this->html('section', ['anchor' => $bad]));
+        }
+        $doc = F::doc();
+        $doc['nodes']['a']['props']['anchor'] = ['$bind' => 'anchor'];
+        self::assertStringContainsString('data-cms="a" id="contact-us"', PageRenderer::render($doc, ['anchor' => 'contact-us'])['html']);
     }
 }

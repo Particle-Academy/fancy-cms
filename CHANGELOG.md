@@ -15,6 +15,75 @@ upgrading.
 
 ## [Unreleased]
 
+## [0.5.0] - 2026-10-23
+
+### Added
+
+- `FancyCms\Agent::guide()` ships the professional-page guide used by the
+  website-builder lab. A SHA-256 pin and a direct PHP/UI byte comparison guard
+  the shared text; CI fetches the canonical UI guide for that comparison.
+- `Agent::describe()` returns the compact JSON-friendly operation, element,
+  style and breakpoint catalogue. Its shorthand is documented, with an
+  8,000-byte regression budget. It excludes host-authored `richtext` from the
+  agent element list and identifies browser-only behavior.
+- `FancyCms\PageSession` holds one document and an attributed op log. Batches
+  validate through `PageDoc::apply` and commit atomically. Each op gets an
+  opaque revision; a stale `basedOn` refuses the batch with
+  `surface_changed_under_you`. Errors carry an operation index and path.
+- `changesSince()` returns a complete chronological feed of created, updated,
+  deleted and moved handles with `human`/`agent` actors, including subtree
+  tombstones. Unknown cursors fail explicitly instead of reporting silence.
+  `node:<id>` and `page:<doc.id>` handles keep node and whole-page edits distinct;
+  id components are URL-encoded so whitespace and Unicode survive parsing.
+- Versioned `toJson()`/`fromJson()` storage preserves object/list tags,
+  operation history, cursors and actors. Restore revalidates and replays;
+  returned documents/logs cannot mutate the session through shared objects.
+  Limits refuse writes before committing: 1,000 ops per batch, 10,000 retained
+  ops and 32 MiB of encoded state. History is never silently pruned.
+- The fixed 0.9 base stylesheet and native button, callout, code, divider and
+  image markup matching fancy-cms-ui. `bin/render-html.php` emits static HTML
+  for the new cross-runtime parity gate. Missing legacy node props/style.base
+  no longer prevent rendering.
+
+### Changed
+
+- **BREAKING:** CSS now starts with the scoped base stylesheet, resetting
+  default heading/paragraph/list margins and styling native elements. Always
+  include `PageRenderer::render(...)["css"]`; per-node rules come later and
+  override the base. Review custom spacing that previously relied on browser
+  margins. Images use `data-cms-fit` instead of inline styles; update selectors
+  that inspected their old `style` attribute. Built-in islands render their
+  native element; unknown islands remain placeholders.
+
+### Fixed
+
+- PHP now renders a valid `props.anchor` as the semantic element's `id`,
+  matching the UI's lowercase-slug allowlist. In-page links can target it;
+  invalid or injected anchors are ignored, including bound values that fail
+  the same check.
+- Eager-image HTML includes the native SSR preload hint, deduplicated within
+  each render; lazy/data images add no hint and later pages cannot inherit it.
+
+### Integration
+
+- The host must lock or compare-and-swap stored state across load/apply/save,
+  provide authenticated actors, require observed revisions on agent writes,
+  authorize operations and broadcast results. `PageSession` makes no network
+  calls and does not authenticate storage. Omitting `basedOn` is an explicit
+  unconditional write. Read the README's two-writer example before integrating.
+
+### Validation
+
+- 121 PHP tests / 387 assertions cover the new agent
+  contracts, anchors, renderer markup and malformed-history controls were red
+  before implementation. Isolated stale-write, partial-commit, tombstone and
+  guide-drift controls fail without mutating production source.
+- All five canonical pages match byte for byte in both HTML and CSS against
+  fancy-cms-ui 0.9. Existing reducer/key/number differential checks still pass:
+  28 sequences, 1,090 intermediate states/inverses/undo, 520 keys and 14,200
+  number strings. The actual prism-human-plus parser accepts the complete
+  human-attributed change feed and preserves its revision.
+
 ## [0.4.0] - 2026-10-23
 
 ### Added

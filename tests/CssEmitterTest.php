@@ -19,7 +19,12 @@ final class CssEmitterTest extends TestCase
         $doc['nodes']['a']['style']['base'] = $style;
         $doc['theme'] = $theme;
 
-        return CssEmitter::emit($doc);
+        $css = CssEmitter::emit($doc);
+        // These assertions isolate authored declarations; Renderer09Test and
+        // the cross-runtime byte comparison cover the fixed base stylesheet.
+        self::assertStringStartsWith(CssEmitter::BASE_CSS, $css);
+
+        return $css === CssEmitter::BASE_CSS."\n" ? '' : substr($css, strlen(CssEmitter::BASE_CSS) + 2);
     }
 
     public static function unsafeValues(): iterable
