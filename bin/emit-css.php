@@ -11,7 +11,11 @@ declare(strict_types=1);
  */
 
 require __DIR__.'/../src/Render/CssEmitter.php';
+require __DIR__.'/../src/Render/JsValue.php';
+require __DIR__.'/../src/Document/Ordering.php';
+require __DIR__.'/../src/Document/PageJson.php';
 
+use FancyCms\Document\PageJson;
 use FancyCms\Render\CssEmitter;
 
 $path = $argv[1] ?? null;
@@ -20,8 +24,9 @@ if ($path === null || ! is_file($path)) {
     exit(2);
 }
 
-$doc = json_decode((string) file_get_contents($path), true);
-if (! is_array($doc)) {
+try {
+    $doc = PageJson::decodeDocument((string) file_get_contents($path));
+} catch (JsonException|InvalidArgumentException) {
     fwrite(STDERR, "invalid JSON\n");
     exit(2);
 }

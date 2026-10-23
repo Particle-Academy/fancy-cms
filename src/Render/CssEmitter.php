@@ -4,283 +4,366 @@ declare(strict_types=1);
 
 namespace FancyCms\Render;
 
-/**
- * PHP style→CSS emitter — the byte-for-byte mirror of the JS emitter in
- * @particle-academy/fancy-cms-ui (src/render/css.ts). Determinism (sorted
- * declarations, a fixed selector/media format, and sorted-id node order) lets
- * the parity harness diff the two engines exactly.
- *
- * Pure PHP — NO Laravel dependency — so it can run standalone (incl. the parity
- * CLI). Phase 0 covers the static subset (layout / constraints / style).
- */
+use FancyCms\Document\Ordering;
+use stdClass;
+
+/** Pure PHP twin of fancy-cms-ui/src/render/css.ts; canonical parity is the gate. */
 final class CssEmitter
 {
-    /** Breakpoint → min-width (px). `base` has no media query. */
     private const BREAKPOINTS = ['base' => 0, 'md' => 768, 'lg' => 1024];
 
-    private const ALIGN = [
-        'start' => 'flex-start',
-        'center' => 'center',
-        'end' => 'flex-end',
-        'stretch' => 'stretch',
-    ];
+    private const ALIGN = ['start' => 'flex-start', 'center' => 'center', 'end' => 'flex-end', 'stretch' => 'stretch'];
 
-    private const JUSTIFY = [
-        'start' => 'flex-start',
-        'center' => 'center',
-        'end' => 'flex-end',
-        'between' => 'space-between',
-        'around' => 'space-around',
-    ];
+    private const JUSTIFY = ['start' => 'flex-start', 'center' => 'center', 'end' => 'flex-end', 'between' => 'space-between', 'around' => 'space-around'];
 
-    /**
-     * @param  array<string,mixed>  $doc
-     */
     public static function emit(array $doc): string
     {
+        if (! is_array($doc['nodes'] ?? null)) {
+            return '';
+        }
         $blocks = [];
-        $nodes = $doc['nodes'] ?? [];
+        $theme = self::serializeRule(':root', self::themeDecls($doc['theme'] ?? []), '');
+        if ($theme !== '') {
+            $blocks[] = $theme;
+        }
+        $nodes = $doc['nodes'];
         $ids = array_keys($nodes);
-        sort($ids, SORT_STRING);
-
+        usort($ids, static fn ($a, $b): int => Ordering::compare((string) $a, (string) $b));
         foreach ($ids as $id) {
             $node = $nodes[$id];
             $selector = self::selectorFor((string) $id);
             $parentFree = self::isParentFree($doc, $node);
-
-            $base = array_merge(
-                self::layoutDecls($node),
+            $style = $node['style']['base'] ?? [];
+            $base = array_replace(
+                self::containerDecls($node, $style, true),
                 isset($node['constraints']['base']) ? self::constraintDecls($node['constraints']['base'], $parentFree) : [],
-                self::styleDecls($node['style']['base'] ?? []),
+                self::styleDecls($style),
+                self::visibilityDecls($node, $style, true),
             );
-            $baseRule = self::serializeRule($selector, $base, '');
-            if ($baseRule !== '') {
-                $blocks[] = $baseRule;
+            $rule = self::serializeRule($selector, $base, '');
+            if ($rule !== '') {
+                $blocks[] = $rule;
             }
-
-            foreach (($doc['breakpoints'] ?? []) as $bp) {
+            foreach ($doc['breakpoints'] ?? [] as $bp) {
                 if ($bp === 'base' || ! array_key_exists($bp, self::BREAKPOINTS)) {
                     continue;
                 }
-                $px = self::BREAKPOINTS[$bp];
-                $decls = array_merge(
+                $style = $node['style'][$bp] ?? null;
+                $decls = array_replace(
+                    $style !== null ? self::containerDecls($node, $style, false) : [],
                     isset($node['constraints'][$bp]) ? self::constraintDecls($node['constraints'][$bp], $parentFree) : [],
-                    isset($node['style'][$bp]) ? self::styleDecls($node['style'][$bp]) : [],
+                    $style !== null ? self::styleDecls($style) : [],
+                    $style !== null ? self::visibilityDecls($node, $style, false) : [],
                 );
                 $inner = self::serializeRule($selector, $decls, '  ');
                 if ($inner !== '') {
-                    $blocks[] = "@media (min-width: {$px}px) {\n{$inner}\n}";
+                    $blocks[] = '@media (min-width: '.self::BREAKPOINTS[$bp]."px) {\n".$inner."\n}";
                 }
             }
         }
 
-        return implode("\n\n", $blocks) . (count($blocks) ? "\n" : '');
+        return implode("\n\n", $blocks).($blocks !== [] ? "\n" : '');
     }
 
     private static function selectorFor(string $id): string
     {
-        return "[data-cms=\"{$id}\"]";
+        return '[data-cms="'.self::cssString($id).'"]';
     }
 
-    /** @param array<string,mixed> $len */
-    private static function lengthToCss(array $len): string
+    public static function cssString(string $value): string
     {
-        return self::num($len['value']) . $len['unit'];
+        $out = '';
+        for ($i = 0, $n = strlen($value); $i < $n; $i++) {
+            $ch = $value[$i];
+            $code = ord($ch);
+            if ($ch === '\\' || $ch === '"') {
+                $out .= '\\'.$ch;
+            } elseif ($code < 0x20 || $code === 0x7F || $ch === '<') {
+                $out .= '\\'.dechex($code).' ';
+            } else {
+                $out .= $ch;
+            }
+        }
+
+        return $out;
     }
 
-    private static function sizeToCss(mixed $size): string
+    /** Identical quote/parenthesis state machine to JS; not a CSS parser. */
+    public static function safeCssValue(string $value): ?string
     {
-        if ($size === 'fill') {
-            return '100%';
+        if (strpbrk($value, '{}<') !== false) {
+            return null;
         }
-        if ($size === 'hug') {
-            return 'auto';
+        $depth = 0;
+        $quote = null;
+        for ($i = 0, $n = strlen($value); $i < $n; $i++) {
+            $ch = $value[$i];
+            if ($quote !== null) {
+                if ($ch === $quote) {
+                    $quote = null;
+                }
+            } elseif ($ch === '"' || $ch === "'") {
+                $quote = $ch;
+            } elseif ($ch === '(') {
+                $depth++;
+            } elseif ($ch === ')') {
+                $depth = max(0, $depth - 1);
+            } elseif ($ch === ';' && $depth === 0) {
+                return null;
+            }
         }
 
-        return self::lengthToCss($size);
+        return $value;
     }
 
-    /**
-     * @param  array<string,mixed>  $s
-     * @return array<string,string>
-     */
+    private static function put(array &$decls, string $prop, mixed $value): void
+    {
+        $safe = self::safeCssValue(JsValue::string($value));
+        if ($safe !== null) {
+            $decls[$prop] = $safe;
+        }
+    }
+
+    private static function lengthToCss(mixed $length): ?string
+    {
+        if (! is_array($length) && ! $length instanceof stdClass) {
+            return null;
+        }
+        $length = (array) $length;
+        if (self::numberToCss($length['value'] ?? null) === null || ! in_array($length['unit'] ?? null, ['px', '%', 'vw', 'vh', 'rem', 'fr'], true)) {
+            return null;
+        }
+
+        return JsValue::string($length['value']).$length['unit'];
+    }
+
+    private static function sizeToCss(mixed $size): ?string
+    {
+        return match ($size) {
+            'fill' => '100%', 'hug' => 'auto', default => self::lengthToCss($size)
+        };
+    }
+
+    private static function numberToCss(mixed $value): ?string
+    {
+        return (is_int($value) || is_float($value)) && is_finite((float) $value) ? JsValue::string($value) : null;
+    }
+
+    private static function putLen(array &$decls, array $props, mixed $length): void
+    {
+        $value = self::lengthToCss($length);
+        if ($value !== null) {
+            foreach ($props as $prop) {
+                $decls[$prop] = $value;
+            }
+        }
+    }
+
     private static function styleDecls(array $s): array
     {
         $d = [];
-        if (isset($s['padding'])) {
-            $d['padding'] = self::lengthToCss($s['padding']);
+        foreach (['padding' => 'padding', 'margin' => 'margin', 'radius' => 'border-radius', 'maxWidth' => 'max-width', 'minHeight' => 'min-height'] as $key => $prop) {
+            self::putLen($d, [$prop], $s[$key] ?? null);
         }
-        if (isset($s['margin'])) {
-            $d['margin'] = self::lengthToCss($s['margin']);
+        foreach (['paddingX' => ['padding-left', 'padding-right'], 'paddingY' => ['padding-top', 'padding-bottom'], 'marginX' => ['margin-left', 'margin-right'], 'marginY' => ['margin-top', 'margin-bottom']] as $key => $props) {
+            if ($key === 'marginX' && ($s[$key] ?? null) === 'auto') {
+                foreach ($props as $prop) {
+                    $d[$prop] = 'auto';
+                }
+            } else {
+                self::putLen($d, $props, $s[$key] ?? null);
+            }
         }
-        if (isset($s['radius'])) {
-            $d['border-radius'] = self::lengthToCss($s['radius']);
+        if (is_string($s['aspectRatio'] ?? null)) {
+            self::put($d, 'aspect-ratio', $s['aspectRatio']);
         }
-        if (array_key_exists('background', $s)) {
-            $d['background'] = $s['background'];
+        if (($s['sticky'] ?? null) === true) {
+            $d['position'] = 'sticky';
+            $d['top'] = '0';
         }
-        if (array_key_exists('color', $s)) {
-            $d['color'] = $s['color'];
+        if ((is_int($s['zIndex'] ?? null) || is_float($s['zIndex'] ?? null)) && is_finite((float) $s['zIndex'])) {
+            $v = (float) $s['zIndex'];
+            $d['z-index'] = JsValue::number($v < 0 ? ceil($v) : floor($v));
         }
-        if (array_key_exists('opacity', $s)) {
-            $d['opacity'] = self::num($s['opacity']);
+        foreach (['overflow' => ['overflow', ['visible', 'hidden', 'auto']], 'backgroundSize' => ['background-size', ['cover', 'contain', 'auto']], 'textTransform' => ['text-transform', ['none', 'uppercase', 'lowercase', 'capitalize']], 'textAlign' => ['text-align', ['left', 'center', 'right', 'justify']]] as $key => [$prop, $allowed]) {
+            if (isset($s[$key]) && in_array($s[$key], $allowed, true)) {
+                $d[$prop] = $s[$key];
+            }
         }
-        if (array_key_exists('fontFamily', $s)) {
-            $d['font-family'] = $s['fontFamily'];
+        foreach (['background' => 'background', 'backgroundPosition' => 'background-position', 'color' => 'color', 'fontFamily' => 'font-family', 'border' => 'border', 'boxShadow' => 'box-shadow', 'transform' => 'transform', 'filter' => 'filter'] as $key => $prop) {
+            if (is_string($s[$key] ?? null)) {
+                self::put($d, $prop, $s[$key]);
+            }
         }
-        if (isset($s['fontSize'])) {
-            $d['font-size'] = self::lengthToCss($s['fontSize']);
+        foreach (['opacity' => 'opacity', 'fontWeight' => 'font-weight', 'lineHeight' => 'line-height'] as $key => $prop) {
+            $value = self::numberToCss($s[$key] ?? null);
+            if ($value !== null) {
+                $d[$prop] = $value;
+            }
         }
-        if (array_key_exists('fontWeight', $s)) {
-            $d['font-weight'] = self::num($s['fontWeight']);
+        foreach (['fontSize' => 'font-size', 'letterSpacing' => 'letter-spacing', 'gap' => 'gap'] as $key => $prop) {
+            self::putLen($d, [$prop], $s[$key] ?? null);
         }
-        if (array_key_exists('lineHeight', $s)) {
-            $d['line-height'] = self::num($s['lineHeight']);
+        if (is_string($s['align'] ?? null) && array_key_exists($s['align'], self::ALIGN)) {
+            $d['align-items'] = self::ALIGN[$s['align']];
         }
-        if (array_key_exists('textAlign', $s)) {
-            $d['text-align'] = $s['textAlign'];
-        }
-        if (isset($s['letterSpacing'])) {
-            $d['letter-spacing'] = self::lengthToCss($s['letterSpacing']);
-        }
-        if (array_key_exists('border', $s)) {
-            $d['border'] = $s['border'];
-        }
-        if (array_key_exists('boxShadow', $s)) {
-            $d['box-shadow'] = $s['boxShadow'];
-        }
-        if (array_key_exists('transform', $s)) {
-            $d['transform'] = $s['transform'];
-        }
-        if (array_key_exists('filter', $s)) {
-            $d['filter'] = $s['filter'];
-        }
-        if (isset($s['gap'])) {
-            $d['gap'] = self::lengthToCss($s['gap']);
-        }
-        if (array_key_exists('align', $s)) {
-            $d['align-items'] = self::ALIGN[$s['align']] ?? $s['align'];
-        }
-        if (array_key_exists('justify', $s)) {
-            $d['justify-content'] = self::JUSTIFY[$s['justify']] ?? $s['justify'];
+        if (is_string($s['justify'] ?? null) && array_key_exists($s['justify'], self::JUSTIFY)) {
+            $d['justify-content'] = self::JUSTIFY[$s['justify']];
         }
 
         return $d;
     }
 
-    /**
-     * @param  array<string,mixed>  $node
-     * @return array<string,string>
-     */
-    private static function layoutDecls(array $node): array
+    private static function shownDisplay(array $node): string
+    {
+        return match ($node['layout'] ?? null) {
+            'stack' => 'flex', 'grid' => 'grid', default => 'block'
+        };
+    }
+
+    private static function containerDecls(array $node, array $style, bool $base): array
     {
         $d = [];
-        $layout = $node['layout'] ?? null;
-        if ($layout === 'stack') {
-            $d['display'] = 'flex';
-            $d['flex-direction'] = $node['style']['base']['direction'] ?? 'column';
-        } elseif ($layout === 'grid') {
-            $d['display'] = 'grid';
-            $cols = $node['style']['base']['columns'] ?? 1;
-            $d['grid-template-columns'] = "repeat({$cols}, 1fr)";
-        } elseif ($layout === 'free') {
-            $d['position'] = 'relative';
+        switch ($node['layout'] ?? null) {
+            case 'stack':
+                if ($base) {
+                    $d['display'] = 'flex';
+                }
+                $direction = in_array($style['direction'] ?? null, ['row', 'column'], true) ? $style['direction'] : null;
+                if ($base || $direction !== null) {
+                    $d['flex-direction'] = $direction ?? 'column';
+                }
+                if (array_key_exists('wrap', $style)) {
+                    $d['flex-wrap'] = JsValue::truthy($style['wrap']) ? 'wrap' : 'nowrap';
+                }
+                break;
+            case 'grid':
+                if ($base) {
+                    $d['display'] = 'grid';
+                }
+                $columns = null;
+                $min = self::lengthToCss($style['columnMin'] ?? null);
+                if ($min !== null) {
+                    $columns = 'repeat(auto-fit, minmax(min('.$min.', 100%), 1fr))';
+                } elseif (self::numberToCss($style['columns'] ?? null) !== null) {
+                    $v = (float) $style['columns'];
+                    $columns = 'repeat('.JsValue::number(max(1, $v < 0 ? ceil($v) : floor($v))).', 1fr)';
+                }
+                if ($base || $columns !== null) {
+                    $d['grid-template-columns'] = $columns ?? 'repeat(1, 1fr)';
+                }
+                break;
+            case 'free':
+                if ($base) {
+                    $d['position'] = 'relative';
+                }
+                break;
         }
 
         return $d;
     }
 
-    /**
-     * @param  array<string,mixed>  $c
-     * @return array<string,string>
-     */
+    private static function visibilityDecls(array $node, array $style, bool $base): array
+    {
+        if (($style['hidden'] ?? null) === true) {
+            return ['display' => 'none'];
+        }
+        if (($style['hidden'] ?? null) === false && ! $base) {
+            return ['display' => self::shownDisplay($node)];
+        }
+
+        return [];
+    }
+
+    private static function themeDecls(mixed $theme): array
+    {
+        if (! is_array($theme) && ! (is_object($theme) && get_class($theme) === stdClass::class)) {
+            return [];
+        }
+        $d = [];
+        $walk = static function ($value, array $path, int $depth) use (&$walk, &$d): void {
+            if ($depth > 64) {
+                return;
+            }
+            if (is_string($value) || ((is_int($value) || is_float($value)) && is_finite((float) $value))) {
+                $parts = [];
+                foreach ($path as $p) {
+                    // These two Unicode uppercase forms lower to ASCII in JS.
+                    $key = preg_replace('/[^a-z0-9-]/', '', strtolower(str_replace(["\u{0130}", "\u{212A}"], ['i', 'k'], (string) $p)));
+                    if ($key !== '') {
+                        $parts[] = $key;
+                    }
+                }
+                if ($parts !== []) {
+                    self::put($d, '--cms-'.implode('-', $parts), $value);
+                }
+            } elseif ((is_object($value) && get_class($value) === stdClass::class) || (is_array($value) && ! array_is_list($value))) {
+                foreach (JsValue::entries($value) as $key => $child) {
+                    $walk($child, [...$path, $key], $depth + 1);
+                }
+            }
+        };
+        foreach (JsValue::entries($theme) as $key => $value) {
+            if ($key !== 'name') {
+                $walk($value, [$key], 0);
+            }
+        }
+
+        return $d;
+    }
+
     private static function constraintDecls(array $c, bool $parentFree): array
     {
         $d = [];
         $transforms = [];
         if ($parentFree) {
             $d['position'] = 'absolute';
-            if (isset($c['left'])) {
-                $d['left'] = self::lengthToCss($c['left']);
+            foreach (['left', 'right', 'top', 'bottom'] as $key) {
+                self::putLen($d, [$key], $c[$key] ?? null);
             }
-            if (isset($c['right'])) {
-                $d['right'] = self::lengthToCss($c['right']);
-            }
-            if (isset($c['top'])) {
-                $d['top'] = self::lengthToCss($c['top']);
-            }
-            if (isset($c['bottom'])) {
-                $d['bottom'] = self::lengthToCss($c['bottom']);
-            }
-            if (! empty($c['centerX'])) {
+            if (JsValue::truthy($c['centerX'] ?? null)) {
                 $d['left'] = '50%';
                 $transforms[] = 'translateX(-50%)';
             }
-            if (! empty($c['centerY'])) {
+            if (JsValue::truthy($c['centerY'] ?? null)) {
                 $d['top'] = '50%';
                 $transforms[] = 'translateY(-50%)';
             }
-            if (count($transforms)) {
+            if ($transforms !== []) {
                 $d['transform'] = implode(' ', $transforms);
             }
         }
-        if (isset($c['width'])) {
-            $d['width'] = self::sizeToCss($c['width']);
-        }
-        if (isset($c['height'])) {
-            $d['height'] = self::sizeToCss($c['height']);
+        foreach (['width', 'height'] as $key) {
+            $value = self::sizeToCss($c[$key] ?? null);
+            if ($value !== null) {
+                $d[$key] = $value;
+            }
         }
 
         return $d;
     }
 
-    /**
-     * @param  array<string,mixed>  $doc
-     * @param  array<string,mixed>  $node
-     */
     private static function isParentFree(array $doc, array $node): bool
     {
         if (($node['parent'] ?? null) === null) {
             return false;
         }
         $parent = $doc['nodes'][$node['parent']] ?? null;
-        if ($parent === null) {
-            return true;
-        }
-        $layout = $parent['layout'] ?? null;
 
-        return $layout === null || $layout === 'free';
+        return $parent === null || ! array_key_exists('layout', $parent) || $parent['layout'] === 'free';
     }
 
-    /**
-     * @param  array<string,string>  $decls
-     */
     private static function serializeRule(string $selector, array $decls, string $indent): string
     {
-        $props = array_keys($decls);
-        sort($props, SORT_STRING);
-        if (count($props) === 0) {
+        if ($decls === []) {
             return '';
         }
+        ksort($decls, SORT_STRING);
         $lines = [];
-        foreach ($props as $p) {
-            $lines[] = "{$indent}  {$p}: {$decls[$p]};";
-        }
-        $body = implode("\n", $lines);
-
-        return "{$indent}{$selector} {\n{$body}\n{$indent}}";
-    }
-
-    /** Mirror JS `String(number)` for the clean authored values the schema allows. */
-    private static function num(mixed $n): string
-    {
-        if (is_int($n)) {
-            return (string) $n;
-        }
-        if (is_float($n) && is_finite($n) && $n === floor($n)) {
-            return (string) (int) $n;
+        foreach ($decls as $prop => $value) {
+            $lines[] = $indent.'  '.$prop.': '.$value.';';
         }
 
-        return (string) $n;
+        return $indent.$selector." {\n".implode("\n", $lines)."\n".$indent.'}';
     }
 }

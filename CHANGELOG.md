@@ -15,6 +15,51 @@ upgrading.
 
 ## [Unreleased]
 
+## [0.4.0] - 2026-10-23
+
+### Added
+
+- Server page-operation spine matching fancy-cms-ui 0.8: all thirteen
+  `PageOp` variants, pure `Reducer::reduce`/`reduceAll`, JSON-wire inverses,
+  tree helpers and matching base-62 fractional keys. Applied edits increment
+  `seq`; invalid targets, cycle moves and non-permutation root reorders keep
+  it unchanged. Merge patches preserve null values and stay shallow.
+- `PageDoc` and `PageOp` validation with structured path errors, known node
+  types/host registries, existing parents, iterative cycle detection and
+  bounds on nodes/JSON depth/value count. `PageDoc::apply` validates before
+  and after an edit and refuses semantic no-ops at the storage boundary.
+- `PageJson` decoding/encoding preserves empty object/list distinctions,
+  numeric map keys and opaque JSON values; non-JSON objects are refused before
+  a serialization callback can run. Use this codec for incoming/stored JSON.
+- PHP parity for 0.8 theme tokens, responsive stack/grid controls, auto-fit
+  grids, per-side spacing, sizing, sticky positioning, visibility and other
+  style additions. Values pass the same CSS escape, length, keyword or number
+  gate as JavaScript. Selector ids cannot terminate an inline stylesheet.
+- Static headings, paragraphs, safe links/buttons, lists, landmark containers
+  and image attributes, plus bindings into the explicitly supplied data context.
+
+### Changed
+
+- **BREAKING:** `PageRenderer` now puts the stable `data-cms` handle on a
+  semantic element (p, h1–h6, a, ul/ol or a landmark) instead of always a div.
+  Update custom `div[data-cms]` selectors to `[data-cms]` where needed, and
+  set margins explicitly when the browser's semantic-element defaults differ.
+  Legacy `sections[]` ordering stays authoritative for legacy documents.
+- Invalid CSS units/keywords/numbers and declaration/rule escapes are dropped
+  by the emitter itself. Valid data URLs and quoted semicolons stay supported.
+
+### Validation
+
+- 87 PHP tests / 254 assertions. Initial operation tests were red on 0.3;
+  semantic/emitter and boundary controls were red before each implementation.
+- Cross-runtime parity: 28 sequences, 1,090 intermediate documents, inverse
+  operations and wire inverse replays, 520 key cases and 14,200 number strings; committed seed
+  `0x5eedc0de`. Only JSON key order is normalized. Isolated mutations that
+  ignore property patches or return wrong fractional keys both fail the gate.
+- Four canonical CSS documents match byte for byte, including hostile ids,
+  malformed declarations and JSON/number-format edge cases. No dependencies,
+  manifest constraints or workflow changes.
+
 ## 0.3.0 — 2026-08-09
 
 ### Fixed
