@@ -4,6 +4,8 @@ declare(strict_types=1);
 
 namespace FancyCms\Render;
 
+use FancyCms\Document\Decorative;
+use FancyCms\Document\Icons;
 use FancyCms\Document\Ordering;
 
 /**
@@ -25,8 +27,9 @@ final class PageRenderer
     {
         $html = '';
         $preloads = [];
+        $decorativeSafe = Decorative::error(is_array($doc['nodes'] ?? null) ? $doc['nodes'] : []) === null;
         foreach (self::roots($doc) as $id) {
-            $html .= self::renderNode($doc, $id, $data, $preloads);
+            $html .= self::renderNode($doc, $id, $data, $preloads, $decorativeSafe);
         }
         $hints = '';
         foreach (array_keys($preloads) as $src) {
@@ -80,7 +83,7 @@ final class PageRenderer
     /**
      * @param  array<string,mixed>  $doc
      */
-    private static function renderNode(array $doc, string $id, array $data, array &$preloads): string
+    private static function renderNode(array $doc, string $id, array $data, array &$preloads, bool $decorativeSafe): string
     {
         $node = $doc['nodes'][$id] ?? null;
         if ($node === null) {
@@ -103,6 +106,9 @@ final class PageRenderer
         }
         foreach ($attrs as $key => $value) {
             $attr .= ' '.$key.'="'.self::escape($value).'"';
+        }
+        if ($decorativeSafe && in_array($node['type'] ?? null, ['frame', 'shape'], true) && ($props['decorative'] ?? null) === true) {
+            $attr .= ' aria-hidden="true"';
         }
         $escape = self::escape(...);
         $type = $node['type'] ?? '';
@@ -129,6 +135,20 @@ final class PageRenderer
                     $inner .= '<li>'.$escape(JsValue::text($item)).'</li>';
                 }
             }
+        } elseif ($type === 'icon') {
+            $glyph = Icons::validProps($props) ? Icons::glyph($props['name']) : null;
+            if ($glyph !== null) {
+                $inner = '<span aria-hidden="true" data-react-fancy-icon="" class="inline-flex items-center justify-center flex-shrink-0 h-5 w-5" style="display:inline-flex;align-items:center;justify-content:center;flex-shrink:0;width:1em;height:1em;vertical-align:middle">';
+                $inner .= '<svg xmlns="http://www.w3.org/2000/svg" width="1em" height="1em" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true" focusable="false">';
+                foreach ($glyph as [$primitive, $attributes]) {
+                    $inner .= '<'.$primitive;
+                    foreach ($attributes as $key => $value) {
+                        $inner .= ' '.$key.'="'.$escape((string) $value).'"';
+                    }
+                    $inner .= '></'.$primitive.'>';
+                }
+                $inner .= '</svg></span>';
+            }
         } elseif ($type === 'image') {
             $fit = $text($props['fit'] ?? null);
             $src = $text($props['src'] ?? null);
@@ -152,7 +172,7 @@ final class PageRenderer
             $inner = $escape($content === '' ? 'Callout' : $content);
         } elseif (empty($node['island']) || in_array($type, ['section', 'stack', 'grid', 'frame', 'shape', 'card'], true)) {
             foreach (self::childrenOf($doc, $id) as $childId) {
-                $inner .= self::renderNode($doc, $childId, $data, $preloads);
+                $inner .= self::renderNode($doc, $childId, $data, $preloads, $decorativeSafe);
             }
         }
 
@@ -171,6 +191,11 @@ final class PageRenderer
         $props = $node['props'] ?? [];
         $type = $node['type'] ?? '';
         $as = $text($props['as'] ?? null);
+        if ($type === 'icon') {
+            return ['span', Icons::validProps($props) && ! $props['decorative']
+                ? ['role' => 'img', 'aria-label' => $props['label']]
+                : ['aria-hidden' => 'true']];
+        }
         $landmarks = ['section', 'header', 'nav', 'main', 'footer', 'article', 'aside', 'div'];
         if ($type === 'heading') {
             $level = $text($props['level'] ?? null);

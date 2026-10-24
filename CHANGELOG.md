@@ -15,6 +15,39 @@ upgrading.
 
 ## [Unreleased]
 
+### Added
+
+- Full Fancy Lucide 0.511.0 catalogue (1,803 names/aliases, 1,594 glyphs), bounded
+  `Agent::icons`/`Icons::search` pagination for `cms_icons`, and a compact
+  `Agent::describe` rule rather than a full name dump. Glyph JSON loads lazily
+  per icon; class loading reads no catalogue. Source version/content hash and
+  the complete Lucide ISC licence/NOTICE ship with the package; the UI twin's
+  offline generator checks both artifacts against installed Fancy's Lucide.
+
+- Native `icon` leaf nodes with a closed name catalogue, explicit decorative
+  flag and accessible label for meaningful icons. Size and colour use existing
+  responsive font-size styles and theme tokens. No SVG, paths, bindings or
+  arbitrary attributes may enter through icon props.
+- PHP/React HTML, CSS and operation parity fixtures, including hostile names,
+  invalid edits and exact wire undo when an optional label is first introduced.
+  The generated SVG data and Fancy-compatible wrapper are shared with
+  fancy-cms-ui; JavaScript keeps its react-fancy peer optional.
+
+### Security
+
+- Decorative frame/shape subtrees accept only frames, shapes and decorative
+  icons without actions. Validation, insertion, prop merges, moves and action edits refuse meaningful
+  descendants. Direct malformed rendering fails visible; safe artwork emits
+  `aria-hidden="true"`. The matching HTML/operations parity includes hostile
+  attempts to hide links, headings, CTAs and nested subtrees.
+- **BREAKING for documents using `decorative` as unrelated metadata:** the prop
+  is now reserved for frame/shape/icon. Rename such metadata on other node types.
+  Existing documents without that prop need no change.
+
+- Icon insertion and merged prop edits validate before mutation. Invalid
+  operations remain logged no-ops; icons reject children. Direct malformed
+  rendering emits no SVG or meaningful-image role.
+
 ## [0.5.0] - 2026-10-23
 
 ### Added

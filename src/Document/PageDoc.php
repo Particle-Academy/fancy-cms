@@ -9,7 +9,7 @@ use FancyCms\Exceptions\SchemaException;
 /** Server storage boundary. Host addon registries supply their known types. */
 final class PageDoc
 {
-    public const NODE_TYPES = ['section', 'stack', 'grid', 'frame', 'shape', 'card', 'text', 'heading', 'richtext', 'link', 'list', 'divider', 'callout', 'code', 'button', 'image', 'repeater'];
+    public const NODE_TYPES = ['section', 'stack', 'grid', 'frame', 'shape', 'card', 'text', 'heading', 'richtext', 'link', 'list', 'divider', 'callout', 'code', 'button', 'image', 'repeater', 'icon'];
 
     public static function validate(mixed $doc, ?array $knownTypes = null): array
     {
@@ -66,6 +66,12 @@ final class PageDoc
             if (is_string($node['parent'] ?? null) && ! array_key_exists($node['parent'], $nodes)) {
                 $s->error($path.'.parent', 'existing parent id or null', $node['parent']);
             }
+            if (is_string($node['parent'] ?? null) && ($nodes[$node['parent']]['type'] ?? null) === 'icon') {
+                $s->error($path.'.parent', 'parent accepting children (icons are leaves)', $node['parent']);
+            }
+        }
+        if (($decorationError = Decorative::error($nodes)) !== null) {
+            $s->error('$.nodes', $decorationError, $nodes);
         }
         // Linear, iterative parent-chain colouring. Never recurse down a
         // hostile tree or rescan the same already-completed ancestor chain.

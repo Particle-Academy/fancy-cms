@@ -42,6 +42,29 @@ a design studio would ship: clear, specific, consistent, and good on a phone.
 3. Set the theme first, in one `set_theme` op, so every later style can
    reference it.
 
+## Native icons
+
+Use `icon` leaves for concise visual anchors when they support the content.
+Search `cms_icons({query,cursor:0})` for a name or words before choosing an icon;
+continue with `nextCursor` if needed (at most 20 names per response). Empty query
+lists the full closed Lucide catalogue in pages. `cms_describe` gives the prop
+contract without dumping the catalogue. Do not guess names or supply SVG,
+paths, HTML, bindings or extra props. Use literal `name` and explicit
+`decorative: true` for an icon beside text that already explains it. A meaningful
+icon needs `decorative: false` and a nonblank literal `label` (max1024 UTF-8
+bytes). Icons cannot contain children. Their one-em square follows responsive
+`style.fontSize`; `style.color` uses the existing theme tokens. Both renderers
+use the same generated catalogue. Hosts preload selected glyphs before React
+rendering/SSR and supply the same `icons` map for hydration; documents never
+supply glyph data. PHP loads each selected glyph lazily from the package.
+
+For abstract decorative artwork, only `frame` and `shape` accept literal
+`props.decorative: true` to hide the entire subtree from assistive technology.
+Only frames, shapes and decorative icons without actions may be inside; meaningful content,
+including text, links, buttons, images and meaningful icons, is refused on
+insertion, moves or prop edits. False/omitted flags stay visible. Do not put
+the flag on other node types or use it to hide product content.
+
 ## The theme
 
 Set tokens once and reference them as `var(--cms-<group>-<name>)`:

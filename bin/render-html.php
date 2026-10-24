@@ -7,6 +7,8 @@ require __DIR__.'/../src/Render/CssEmitter.php';
 require __DIR__.'/../src/Render/JsValue.php';
 require __DIR__.'/../src/Render/PageRenderer.php';
 require __DIR__.'/../src/Document/Ordering.php';
+require __DIR__.'/../src/Document/Icons.php';
+require __DIR__.'/../src/Document/Decorative.php';
 require __DIR__.'/../src/Document/PageJson.php';
 
 use FancyCms\Document\PageJson;

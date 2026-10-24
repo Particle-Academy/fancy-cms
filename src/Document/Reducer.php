@@ -33,6 +33,12 @@ final class Reducer
                 if ($new['parent'] !== null && ! isset($nodes[$new['parent']])) {
                     return $invalid('parent not found');
                 }
+                if (($new['type'] ?? null) === 'icon' && ! Icons::validProps($new['props'] ?? null)) {
+                    return $invalid('invalid icon props');
+                }
+                if ($new['parent'] !== null && ($nodes[$new['parent']]['type'] ?? null) === 'icon') {
+                    return $invalid('icons cannot have children');
+                }
                 $doc['nodes'][$new['id']] = $new;
                 break;
             case 'remove_node':
@@ -56,6 +62,9 @@ final class Reducer
                 if ($op['parent'] !== null && in_array($op['parent'], self::descendantIds($doc, $id), true)) {
                     return $invalid('move would create a cycle');
                 }
+                if ($op['parent'] !== null && ($nodes[$op['parent']]['type'] ?? null) === 'icon') {
+                    return $invalid('icons cannot have children');
+                }
                 $doc['nodes'][$id]['parent'] = $op['parent'];
                 $doc['nodes'][$id]['order'] = $op['order'];
                 break;
@@ -63,7 +72,11 @@ final class Reducer
                 if ($node === null) {
                     return $invalid('node not found');
                 }
-                $doc['nodes'][$id]['props'] = array_replace($node['props'], $op['patch']);
+                $props = array_replace($node['props'], $op['patch']);
+                if ($node['type'] === 'icon' && ! Icons::validProps($props)) {
+                    return $invalid('invalid icon props');
+                }
+                $doc['nodes'][$id]['props'] = $props;
                 break;
             case 'set_layout':
                 if ($node === null) {
@@ -153,6 +166,10 @@ final class Reducer
                 break;
             default:
                 return $invalid('unknown op "'.(is_string($type) ? $type : '').'"');
+        }
+        if (in_array($type, ['insert_node', 'move_node', 'set_node_props', 'set_action'], true)
+            && ($decorationError = Decorative::error($doc['nodes'])) !== null) {
+            return $invalid($decorationError);
         }
         $doc['seq']++;
 
@@ -245,6 +262,17 @@ final class Reducer
 
                 return $ops;
             case 'set_node_props':
+                if ($node !== null && in_array($node['type'], ['frame', 'shape'], true)
+                    && array_key_exists('decorative', $op['patch']) && ! array_key_exists('decorative', $node['props'])) {
+                    return [['t' => 'remove_node', 'id' => $id], ...array_map(
+                        static fn ($child): array => ['t' => 'insert_node', 'node' => $doc['nodes'][$child]],
+                        [$id, ...self::descendantIds($doc, $id)]
+                    )];
+                }
+                if ($node !== null && $node['type'] === 'icon' && array_diff(array_keys($op['patch']), array_keys($node['props'])) !== []) {
+                    return [['t' => 'remove_node', 'id' => $id], ['t' => 'insert_node', 'node' => $node]];
+                }
+
                 return $node === null ? [] : [['t' => 'set_node_props', 'id' => $id, 'patch' => self::pick($node['props'], array_keys($op['patch']))]];
             case 'set_layout':
                 if ($node === null) {

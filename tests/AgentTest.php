@@ -14,7 +14,7 @@ final class AgentTest extends TestCase
     public function test_shipped_guide_is_the_canonical_bytes(): void
     {
         $guide = Agent::guide();
-        self::assertSame('59a0bd8a51785cbf8d3dcf38cca1a51a69fe8aff6fdae803b4bee217cf8481a7', hash('sha256', $guide));
+        self::assertSame('df2628c033d7ac4c5b802545274a9ddd26537115afc2d2fdf1e774dd8a3349b4', hash('sha256', $guide));
         self::assertStringContainsString('surface_changed_under_you', $guide);
         self::assertStringContainsString('their edit is the new intent', $guide);
         $mirror = getenv('FANCY_CMS_GUIDE_MIRROR') ?: dirname(__DIR__, 2).'/fancy-cms-ui/agent-guide/professional-pages.md';

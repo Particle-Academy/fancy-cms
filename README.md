@@ -1,5 +1,37 @@
 # particle-academy/fancy-cms
 
+Native `icon` nodes are bounded leaves. `Agent::describe()['elements']['icon']`
+describes their prop contract. Search `Agent::icons(query,cursor)` for up to 20
+names per response (`source`, `names`, `total`, `nextCursor`); expose this as
+`cms_icons` to agents. The full Fancy Lucide 0.511.0 set has 1,803 names/aliases
+and 1,594 glyphs. Empty query lists names in pages; a name or ASCII words search
+matches all words, exact match first then lexical order. Set literal props
+`name`, `decorative` and, for a
+meaningful icon, a nonblank `label` (up to1024 UTF-8 bytes). Decorative labels
+are hidden. SVG, paths, extra props and bindings are rejected at storage and
+operation boundaries. Existing responsive `style.fontSize` sizes the one-em
+glyph; `style.color` accepts the existing theme tokens. PHP and React render
+the same generated catalogue and byte-identical SVG. The React package keeps
+react-fancy optional by emitting the compatible wrapper directly.
+
+PHP reads no icon data at class load. Validation/search loads the closed name
+index; rendering loads only the selected per-glyph JSON files and caches them
+for reuse in the process. JavaScript hosts preload matching glyphs through the UI
+package's separate icon subpaths and pass the same `icons` map for SSR and
+hydration. Glyph data is never document input. Provenance/version/content SHA256
+live in `resources/icons/metadata.json`; see `NOTICE` and
+`licenses/LUCIDE-LICENSE`. The UI twin's offline `npm run icons:check` verifies
+both packages and detects drift from the installed Fancy Lucide artifact.
+
+For abstract artwork, `frame` and `shape` accept literal boolean
+`props.decorative`. True emits `aria-hidden="true"`; false/omitted stays visible.
+The entire subtree may contain only frames, shapes and decorative icons without actions.
+Storage and both operation reducers refuse meaningful descendants, including
+inserts, moves, prop and action edits that would hide a CTA, heading, image or meaningful
+icon. Malformed documents rendered directly fail visible. The `decorative`
+property is reserved for frames, shapes and icons; rename metadata using that
+key on other node types.
+
 [![Fancified](art/fancified.svg)](https://particle.academy)
 
 > ⚠️ **Early-release BETA.** This package is young and moving fast — expect

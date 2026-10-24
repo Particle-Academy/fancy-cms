@@ -118,6 +118,12 @@ final class Schema
             $this->string($node['parent'], $path.'.parent');
         }
         $this->record($node['props'] ?? null, $path.'.props');
+        if (Decorative::propsError($node) !== null) {
+            $this->error($path.'.props.decorative', 'literal boolean on frame/shape (or icon accessibility flag)', $node['props']['decorative'] ?? null);
+        }
+        if (($node['type'] ?? null) === 'icon' && ! Icons::validProps($node['props'] ?? null)) {
+            $this->error($path.'.props', 'allowlisted icon name, decorative boolean and label when meaningful; no other props', $node['props'] ?? null);
+        }
         if (array_key_exists('layout', $node)) {
             $this->enum($node['layout'], ['free', 'stack', 'grid'], $path.'.layout');
         }

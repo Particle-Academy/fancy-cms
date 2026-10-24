@@ -4,11 +4,18 @@ declare(strict_types=1);
 
 namespace FancyCms;
 
+use FancyCms\Document\Icons;
 use RuntimeException;
 
 /** The package-owned prompt and compact, JSON-friendly agent catalogue. */
 final class Agent
 {
+    /** A bounded tool response; never append the full catalogue to a prompt. */
+    public static function icons(string $query = '', int $cursor = 0): array
+    {
+        return Icons::search($query, $cursor);
+    }
+
     public static function guide(): string
     {
         $path = dirname(__DIR__).'/agent-guide/professional-pages.md';
@@ -46,7 +53,7 @@ final class Agent
         ];
 
         return [
-            'notation' => '? means optional; | means alternatives; named shapes below; props may use Binding; patches are shallow and null stays data',
+            'notation' => '? means optional; | means alternatives; named shapes below; props may use Binding except icon; icon props are closed literals; patches are shallow and null stays data',
             'ops' => [
                 'insert_node' => ['node' => 'Node'], 'remove_node' => ['id' => 'node id'],
                 'move_node' => ['id' => 'node id', 'parent' => 'node id|null', 'order' => 'fractional key'],
@@ -61,7 +68,8 @@ final class Agent
                 'reorder_roots' => ['order' => 'all current root ids, exactly once'],
             ],
             'elements' => [
-                'section' => $container, 'stack' => $container, 'grid' => $container, 'frame' => $container, 'shape' => $container, 'card' => $container,
+                'section' => $container, 'stack' => $container, 'grid' => $container,
+                'frame' => $container + ['decorative' => 'literal boolean'], 'shape' => $container + ['decorative' => 'literal boolean'], 'card' => $container,
                 'text' => ['content' => 'string'], 'heading' => ['content' => 'string', 'level' => [1, 2, 3, 4, 5, 6]],
                 'link' => ['content' => 'string', 'href' => 'safe relative/http/https/mailto/tel URL'],
                 'list' => ['items' => 'string[]', 'ordered' => 'boolean'],
@@ -69,9 +77,11 @@ final class Agent
                 'code' => ['content' => 'string'],
                 'button' => ['label' => 'string', 'href' => 'safe relative/http/https/mailto/tel URL', 'variant' => ['primary', 'outline', 'ghost']],
                 'image' => ['src' => 'URL', 'alt' => 'string', 'fit' => ['cover', 'contain', 'fill', 'none', 'scale-down'], 'loading' => ['lazy', 'eager']],
+                'icon' => ['name' => 'Lucide name; search cms_icons(query,cursor)', 'decorative' => 'boolean (required); true hides from assistive technology', 'label?' => 'literal string, required and nonblank when decorative=false; max 1024 UTF-8 bytes'],
                 'repeater' => ['note' => 'repeat.each/as live on Node; dynamic behavior requires browser runtime'],
             ],
             'commonProps' => ['anchor' => '^[a-z][a-z0-9-]{0,63}$ (rendered as id)'],
+            'decorativeRule' => 'frame/shape decorative:true emits aria-hidden; descendants may ONLY be frame, shape or decorative icon without actions. Meaningful content is refused on insert, move, prop or action edits. Other elements cannot use decorative except icon.',
             'shapes' => [
                 'Node' => ['id' => 'unique string', 'type' => 'element key', 'parent' => 'existing node id|null', 'order' => 'fractional key', 'props' => 'record', 'style' => '{base:Style, md?:Style, lg?:Style}', 'layout?' => ['free', 'stack', 'grid'], 'constraints?' => 'per-breakpoint Constraints', 'animations?' => 'Animation[]', 'actions?' => 'Action[]', 'className?' => 'string', 'island?' => 'boolean', 'repeat?' => ['each' => 'Binding', 'as' => 'string']],
                 'Length' => ['value' => 'finite number', 'unit' => ['px', '%', 'vw', 'vh', 'rem', 'fr']],
