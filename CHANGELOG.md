@@ -15,6 +15,8 @@ upgrading.
 
 ## [Unreleased]
 
+## [0.6.0] - 2026-10-24
+
 ### Added
 
 - Full Fancy Lucide 0.511.0 catalogue (1,803 names/aliases, 1,594 glyphs), bounded
