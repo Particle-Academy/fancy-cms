@@ -15,6 +15,14 @@ upgrading.
 
 ## [Unreleased]
 
+### Fixed
+
+- Native icons retain their 1em sizing and alignment under nonce-only Content
+  Security Policy. Fixed wrapper declarations now live in the shared base
+  stylesheet, and native rendering emits no generated inline style attributes.
+  Nothing to do unless you relied on the inline style; the base stylesheet now
+  carries it. PHP/React markup and CSS remain in parity.
+
 ## [0.7.0] - 2026-10-26
 
 ### Added

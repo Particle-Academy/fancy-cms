@@ -138,7 +138,7 @@ final class PageRenderer
         } elseif ($type === 'icon') {
             $glyph = Icons::validProps($props) ? Icons::glyph($props['name']) : null;
             if ($glyph !== null) {
-                $inner = '<span aria-hidden="true" data-react-fancy-icon="" class="inline-flex items-center justify-center flex-shrink-0 h-5 w-5" style="display:inline-flex;align-items:center;justify-content:center;flex-shrink:0;width:1em;height:1em;vertical-align:middle">';
+                $inner = '<span aria-hidden="true" data-react-fancy-icon="" class="inline-flex items-center justify-center flex-shrink-0 h-5 w-5">';
                 $inner .= '<svg xmlns="http://www.w3.org/2000/svg" width="1em" height="1em" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true" focusable="false">';
                 foreach ($glyph as [$primitive, $attributes]) {
                     $inner .= '<'.$primitive;

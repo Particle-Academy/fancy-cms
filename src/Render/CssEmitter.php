@@ -16,6 +16,7 @@ final class CssEmitter
         ":where(h1, h2, h3, h4, h5, h6, p, ul, ol)[data-cms] {\n  margin: 0;\n}\n\n".
         ":where(ul, ol)[data-cms] {\n  padding-left: 1.25em;\n}\n\n".
         ":where(a[data-cms]) {\n  color: inherit;\n}\n\n".
+        ":where([data-react-fancy-icon]) {\n  display: inline-flex;\n  align-items: center;\n  justify-content: center;\n  flex-shrink: 0;\n  width: 1em;\n  height: 1em;\n  vertical-align: middle;\n}\n\n".
         ":where([data-cms] > img) {\n  display: block;\n  height: 100%;\n  object-fit: cover;\n  width: 100%;\n}\n\n".
         ":where([data-cms] > img[data-cms-fit=\"contain\"]) {\n  object-fit: contain;\n}\n\n".
         ":where([data-cms] > img[data-cms-fit=\"fill\"]) {\n  object-fit: fill;\n}\n\n".
