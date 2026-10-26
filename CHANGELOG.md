@@ -15,6 +15,8 @@ upgrading.
 
 ## [Unreleased]
 
+## [0.7.1] - 2026-10-26
+
 ### Fixed
 
 - Native icons retain their 1em sizing and alignment under nonce-only Content
