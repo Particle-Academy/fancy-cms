@@ -5,6 +5,8 @@ declare(strict_types=1);
 /** Static HTML CLI for the dual-renderer parity gate. No styles or added newline. */
 require __DIR__.'/../src/Render/CssEmitter.php';
 require __DIR__.'/../src/Render/JsValue.php';
+require __DIR__.'/../src/Render/FontAssets.php';
+require __DIR__.'/../src/Exceptions/FontResolutionException.php';
 require __DIR__.'/../src/Render/ImageAssets.php';
 require __DIR__.'/../src/Render/PageRenderer.php';
 require __DIR__.'/../src/Document/Ordering.php';
