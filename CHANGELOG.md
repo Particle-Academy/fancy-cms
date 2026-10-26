@@ -15,6 +15,16 @@ upgrading.
 
 ## [Unreleased]
 
+### Added
+
+- Host-resolved responsive image assets: literal `props.asset` handles resolve
+  through the optional third `PageRenderer::render` argument. Measured intrinsic
+  dimensions and declared variants/sizes produce the same HTML/preload hints as
+  React. Unknown or invalid assets render without a source; no authored-URL
+  fallback. Existing images without `asset` retain their legacy behavior.
+- Document a standalone CDN-manifest resolver, catalogue responsibilities and
+  the shared host asset contract in the agent guide. No dependencies added.
+
 ## [0.6.0] - 2026-10-24
 
 ### Added

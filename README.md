@@ -221,7 +221,8 @@ Objects with serialization callbacks are refused before encoding.
 
 ## Static rendering
 
-`PageRenderer::render($doc, $data)` returns HTML and CSS. Stable `data-cms`
+`PageRenderer::render($doc, $data, $imageResolver)` returns HTML and CSS. The
+optional third argument is a synchronous host asset lookup. Stable `data-cms`
 handles sit on the semantic element: headings use h1–h6, text uses paragraphs,
 links/buttons use safe anchors, lists use ul/ol, and containers accept the
 allowlisted landmark in `props.as`. Labels and list items are escaped. Images
@@ -237,6 +238,46 @@ escaping as React's static renderer. Valid `props.anchor` slugs become `id`.
 Eager images add a deduplicated SSR preload hint; lazy and data images do not.
 Missing legacy `props`/`style.base` fields get empty rendering defaults; strict
 document validation still requires the authored document shape.
+
+### Host-resolved responsive images
+
+Set an image node's `props.asset` to a literal catalogue handle. The optional
+resolver returns only host-owned metadata; an unknown handle, absent resolver
+or invalid metadata emits no image source and never falls back to `props.src`.
+Alt, fit and loading remain document properties.
+
+```php
+// A regular shop can use its approved CDN; no flabs storage or database required.
+$assets = [
+    'campaign/hero' => [
+        'src' => 'https://images.shop.example/campaign-1536.jpg', 'width' => 1536, 'height' => 1024,
+        'variants' => [
+            ['src' => 'https://images.shop.example/campaign-480.jpg', 'width' => 480, 'height' => 320],
+            ['src' => 'https://images.shop.example/campaign-960.jpg', 'width' => 960, 'height' => 640],
+        ],
+        'sizes' => '(max-width: 640px) 100vw, 640px',
+    ],
+];
+$imageResolver = static fn (string $handle): ?array => $assets[$handle] ?? null;
+$rendered = \FancyCms\Render\PageRenderer::render($doc, [], $imageResolver);
+```
+
+Intrinsic width/height come only from measured host metadata, not authored props.
+Variants declare source, width and height; widths and URLs must be distinct.
+They are copied/sorted into `srcSet`; a nonempty host `sizes` is required when
+variants exist. Single sources emit dimensions without invented srcset/sizes.
+Dimensions are positive integers up to 1,000,000; at most 16 variants. Sources
+are root-relative or HTTP(S), with no protocol-relative URL, backslash, controls,
+spaces or raw comma (percent-encode it). Invalid metadata refuses the whole
+asset. Eager preload hints match React19's responsive deduplication rules.
+
+Use the same immutable manifest in the PHP host and React SSR/hydration/editor
+surfaces. The resolver is a synchronous closed lookup: never fetch a model's
+URL or pass an unknown handle through as a URL. The host owns authorization,
+catalogue membership, measured dimensions, serving/integrity and CSP. Existing
+images without `asset` keep their legacy `src` behavior, so a closed-asset host
+must validate documents to require allowed asset handles. The package has no
+asset discovery/generation endpoint, network fetch or storage dependency.
 
 The CSS emitter mirrors responsive stack/grid behavior, visibility, theme
 tokens and 0.8 style properties. It escapes ids for quoted selectors and

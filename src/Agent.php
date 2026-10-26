@@ -76,7 +76,7 @@ final class Agent
                 'divider' => [], 'callout' => ['content' => 'string', 'variant' => ['info', 'success', 'warning', 'danger']],
                 'code' => ['content' => 'string'],
                 'button' => ['label' => 'string', 'href' => 'safe relative/http/https/mailto/tel URL', 'variant' => ['primary', 'outline', 'ghost']],
-                'image' => ['src' => 'URL', 'alt' => 'string', 'fit' => ['cover', 'contain', 'fill', 'none', 'scale-down'], 'loading' => ['lazy', 'eager']],
+                'image' => ['asset?' => 'literal host-supplied asset handle; use the host catalogue, never invent URLs, dimensions or variants', 'src' => 'legacy URL only when asset is absent', 'alt' => 'string', 'fit' => ['cover', 'contain', 'fill', 'none', 'scale-down'], 'loading' => ['lazy', 'eager']],
                 'icon' => ['name' => 'Lucide name; search cms_icons(query,cursor)', 'decorative' => 'boolean (required); true hides from assistive technology', 'label?' => 'literal string, required and nonblank when decorative=false; max 1024 UTF-8 bytes'],
                 'repeater' => ['note' => 'repeat.each/as live on Node; dynamic behavior requires browser runtime'],
             ],

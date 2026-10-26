@@ -42,6 +42,17 @@ a design studio would ship: clear, specific, consistent, and good on a phone.
 3. Set the theme first, in one `set_theme` op, so every later style can
    reference it.
 
+## Images from the host catalogue
+
+When the host exposes an image catalogue, select an exact handle it supplied
+and set `image.props.asset` to that literal string. Supply useful `alt`, `fit`
+and lazy/eager `loading`; the host resolves the image's measured dimensions,
+approved variants and responsive sizes. Never invent image URLs, dimensions,
+srcset or catalogue entries. Unknown handles render without a source, and an
+asset node cannot fall back to a legacy `src`. Keep alt empty only for purely
+decorative images. Hosts without asset handles may retain their existing
+legacy image contract; follow the host's declared catalogue/source policy.
+
 ## Native icons
 
 Use `icon` leaves for concise visual anchors when they support the content.

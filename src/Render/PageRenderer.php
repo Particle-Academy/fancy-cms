@@ -23,17 +23,17 @@ final class PageRenderer
      * @param  array<string,mixed>  $data  data context for bindings (Phase 3)
      * @return array{html:string,css:string}
      */
-    public static function render(array $doc, array $data = []): array
+    public static function render(array $doc, array $data = [], ?callable $imageResolver = null): array
     {
         $html = '';
         $preloads = [];
         $decorativeSafe = Decorative::error(is_array($doc['nodes'] ?? null) ? $doc['nodes'] : []) === null;
         foreach (self::roots($doc) as $id) {
-            $html .= self::renderNode($doc, $id, $data, $preloads, $decorativeSafe);
+            $html .= self::renderNode($doc, $id, $data, $preloads, $decorativeSafe, $imageResolver);
         }
         $hints = '';
-        foreach (array_keys($preloads) as $src) {
-            $hints .= '<link rel="preload" as="image" href="'.self::escape((string) $src).'"/>';
+        foreach ($preloads as $hint) {
+            $hints .= $hint;
         }
 
         return ['html' => $hints.$html, 'css' => CssEmitter::emit($doc)];
@@ -83,7 +83,7 @@ final class PageRenderer
     /**
      * @param  array<string,mixed>  $doc
      */
-    private static function renderNode(array $doc, string $id, array $data, array &$preloads, bool $decorativeSafe): string
+    private static function renderNode(array $doc, string $id, array $data, array &$preloads, bool $decorativeSafe, ?callable $imageResolver): string
     {
         $node = $doc['nodes'][$id] ?? null;
         if ($node === null) {
@@ -151,14 +151,25 @@ final class PageRenderer
             }
         } elseif ($type === 'image') {
             $fit = $text($props['fit'] ?? null);
-            $src = $text($props['src'] ?? null);
+            $asset = array_key_exists('asset', $props);
+            $image = $asset ? ImageAssets::resolve($props['asset'], $imageResolver) : null;
+            $src = $asset ? ($image['src'] ?? '') : $text($props['src'] ?? null);
             // Match the native SSR resource hint for eager non-data images.
             // This collection is per render, so neither duplicate nodes nor
             // later pages can accumulate another page's resource hints.
             if ($src !== '' && $text($props['loading'] ?? null) === 'eager' && ! preg_match('/^data:/i', $src)) {
-                $preloads[$src] = true;
+                $srcSet = $image['srcSet'] ?? null;
+                $key = $srcSet === null ? 'src:'.$src : 'srcset:'.$srcSet."\n".$image['sizes'];
+                $preloads[$key] = '<link rel="preload" as="image"'.($srcSet === null ? ' href="'.$escape($src).'"' : ' imageSrcSet="'.$escape($srcSet).'" imageSizes="'.$escape($image['sizes']).'"').'/>';
             }
-            $inner = '<img'.($src === '' ? '' : ' src="'.$escape($src).'"').' alt="'.$escape($text($props['alt'] ?? null)).'" loading="'.($text($props['loading'] ?? null) === 'eager' ? 'eager' : 'lazy').'"';
+            $inner = '<img'.($src === '' ? '' : ' src="'.$escape($src).'"').' alt="'.$escape($text($props['alt'] ?? null)).'"';
+            if ($image !== null) {
+                $inner .= ' width="'.$image['width'].'" height="'.$image['height'].'"';
+                if (isset($image['srcSet'])) {
+                    $inner .= ' srcSet="'.$escape($image['srcSet']).'" sizes="'.$escape($image['sizes']).'"';
+                }
+            }
+            $inner .= ' loading="'.($text($props['loading'] ?? null) === 'eager' ? 'eager' : 'lazy').'"';
             if (in_array($fit, ['contain', 'fill', 'none', 'scale-down'], true)) {
                 $inner .= ' data-cms-fit="'.$fit.'"';
             }
@@ -172,7 +183,7 @@ final class PageRenderer
             $inner = $escape($content === '' ? 'Callout' : $content);
         } elseif (empty($node['island']) || in_array($type, ['section', 'stack', 'grid', 'frame', 'shape', 'card'], true)) {
             foreach (self::childrenOf($doc, $id) as $childId) {
-                $inner .= self::renderNode($doc, $childId, $data, $preloads, $decorativeSafe);
+                $inner .= self::renderNode($doc, $childId, $data, $preloads, $decorativeSafe, $imageResolver);
             }
         }
 
