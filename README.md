@@ -310,6 +310,9 @@ byte in both CSS and HTML; these corpora cover the supported native subset.
 
 ## Principles
 
+Fonts: see [host-resolved fonts](agent-guide/fonts.md) for structured font
+references, same-origin resolution and the opt-in Inter 4.1 bundle.
+
 - **Guest, not host** — adopted per-surface; respects host auth/layout/data.
 - **Human+ is opt-in** — core works with no websockets or agents.
 

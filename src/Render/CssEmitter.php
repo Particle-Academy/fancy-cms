@@ -39,13 +39,14 @@ final class CssEmitter
 
     private const JUSTIFY = ['start' => 'flex-start', 'center' => 'center', 'end' => 'flex-end', 'between' => 'space-between', 'around' => 'space-around'];
 
-    public static function emit(array $doc): string
+    public static function emit(array $doc, ?callable $fontResolver = null, string $fontDisplay = 'swap'): string
     {
         if (! is_array($doc['nodes'] ?? null)) {
             return '';
         }
-        $blocks = [];
-        $theme = self::serializeRule(':root', self::themeDecls($doc['theme'] ?? []), '');
+        $fonts = FontAssets::prepare($doc, $fontResolver, $fontDisplay);
+        $blocks = $fonts['blocks'];
+        $theme = self::serializeRule(':root', self::themeDecls($doc['theme'] ?? [], $fonts['aliases']), '');
         if ($theme !== '') {
             $blocks[] = $theme;
         }
@@ -307,15 +308,18 @@ final class CssEmitter
         return [];
     }
 
-    private static function themeDecls(mixed $theme): array
+    private static function themeDecls(mixed $theme, array $fonts): array
     {
         if (! is_array($theme) && ! (is_object($theme) && get_class($theme) === stdClass::class)) {
             return [];
         }
         $d = [];
-        $walk = static function ($value, array $path, int $depth) use (&$walk, &$d): void {
+        $walk = static function ($value, array $path, int $depth) use (&$walk, &$d, $fonts): void {
             if ($depth > 64) {
                 return;
+            }
+            if (count($path) === 2 && $path[0] === 'font' && isset($fonts[$path[1]])) {
+                $value = '"'.$fonts[$path[1]].'"';
             }
             if (is_string($value) || ((is_int($value) || is_float($value)) && is_finite((float) $value))) {
                 $parts = [];

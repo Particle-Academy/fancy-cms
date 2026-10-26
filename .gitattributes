@@ -2,3 +2,7 @@ agent-guide/*.md text eol=lf
 resources/icons/** text eol=lf
 licenses/** text eol=lf
 NOTICE text eol=lf
+fonts/**/*.woff2 binary
+fonts/**/OFL.txt -text
+fonts/**/manifest.json text eol=lf
+fonts/**/NOTICE text eol=lf

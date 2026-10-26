@@ -23,8 +23,9 @@ final class PageRenderer
      * @param  array<string,mixed>  $data  data context for bindings (Phase 3)
      * @return array{html:string,css:string}
      */
-    public static function render(array $doc, array $data = [], ?callable $imageResolver = null): array
+    public static function render(array $doc, array $data = [], ?callable $imageResolver = null, ?callable $fontResolver = null, string $fontDisplay = 'swap'): array
     {
+        $css = CssEmitter::emit($doc, $fontResolver, $fontDisplay);
         $html = '';
         $preloads = [];
         $decorativeSafe = Decorative::error(is_array($doc['nodes'] ?? null) ? $doc['nodes'] : []) === null;
@@ -36,7 +37,7 @@ final class PageRenderer
             $hints .= $hint;
         }
 
-        return ['html' => $hints.$html, 'css' => CssEmitter::emit($doc)];
+        return ['html' => $hints.$html, 'css' => $css];
     }
 
     /**

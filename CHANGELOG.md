@@ -15,6 +15,17 @@ upgrading.
 
 ## [Unreleased]
 
+### Added
+- Structured `theme.font.<role>` references with a synchronous host `fontResolver`,
+  manifest-derived families, same-origin WOFF2 `@font-face` output and explicit
+  `FontResolutionException` reasons for missing or invalid fonts. Live output
+  defaults to swap; trusted capture callers can select block. Legacy string
+  tokens retain their exact output. The PHP/JS emitters share positive and
+  negative parity checks.
+- Opt-in, unmodified Inter 4.1 variable normal/italic assets, OFL licence,
+  NOTICE and archive/file SHA256 manifest. `BundledFonts::interFiles()` exposes
+  publication metadata; `interAsset()` maps explicitly published host URLs.
+
 ## [0.7.1] - 2026-10-26
 
 ### Fixed
