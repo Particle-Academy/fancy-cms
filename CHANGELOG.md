@@ -15,6 +15,8 @@ upgrading.
 
 ## [Unreleased]
 
+## [0.7.0] - 2026-10-26
+
 ### Added
 
 - Host-resolved responsive image assets: literal `props.asset` handles resolve
