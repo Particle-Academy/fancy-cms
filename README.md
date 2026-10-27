@@ -313,6 +313,11 @@ byte in both CSS and HTML; these corpora cover the supported native subset.
 Fonts: see [host-resolved fonts](agent-guide/fonts.md) for structured font
 references, same-origin resolution and the opt-in Inter 4.1 bundle.
 
+Running a site: see the [webmaster guide](agent-guide/webmaster.md) for the
+render route, recommended CSP, image and font resolvers, accessibility and
+responsive checks, the CLIs and pre-publish verification. The authoring side
+is covered by the matching guide in `@particle-academy/fancy-cms-ui`.
+
 - **Guest, not host** — adopted per-surface; respects host auth/layout/data.
 - **Human+ is opt-in** — core works with no websockets or agents.
 

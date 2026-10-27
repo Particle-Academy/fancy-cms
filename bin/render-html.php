@@ -15,6 +15,7 @@ require __DIR__.'/../src/Document/Decorative.php';
 require __DIR__.'/../src/Document/PageJson.php';
 
 use FancyCms\Document\PageJson;
+use FancyCms\Exceptions\FontResolutionException;
 use FancyCms\Render\PageRenderer;
 
 $path = $argv[1] ?? null;
@@ -44,4 +45,10 @@ if (isset($argv[2])) {
         exit(2);
     }
 }
-echo PageRenderer::render($doc, [], static fn (string $handle): mixed => $manifest[$handle] ?? null)['html'];
+try {
+    echo PageRenderer::render($doc, [], static fn (string $handle): mixed => $manifest[$handle] ?? null)['html'];
+} catch (FontResolutionException $e) {
+    // A structured font needs a host resolver, which this CLI has none of.
+    fwrite(STDERR, $e->reason."\n");
+    exit(3);
+}

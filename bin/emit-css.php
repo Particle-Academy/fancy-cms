@@ -50,4 +50,10 @@ try {
     exit(2);
 }
 
-echo CssEmitter::emit($doc);
+try {
+    echo CssEmitter::emit($doc);
+} catch (FontResolutionException $e) {
+    // A structured font needs a host resolver, which this CLI has none of.
+    fwrite(STDERR, $e->reason."\n");
+    exit(3);
+}

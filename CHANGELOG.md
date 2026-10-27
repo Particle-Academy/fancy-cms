@@ -15,6 +15,25 @@ upgrading.
 
 ## [Unreleased]
 
+## [0.8.1] - 2026-10-26
+
+**Nothing to do:** a documentation addition and a CLI fix. The renderer API is unchanged.
+
+### Added
+- A webmaster guide, `agent-guide/webmaster.md`, shipped in the package: the
+  host-side reference for running a site on fancy-cms. It covers the render
+  route and recommended CSP, image and font resolvers, accessibility and
+  responsive checks, the CLIs, pre-publish verification and current
+  limitations. It pairs with the authoring guide in
+  `@particle-academy/fancy-cms-ui`.
+
+### Fixed
+- `bin/render-html.php`, and `bin/emit-css.php` without `--fonts-stdin`, no
+  longer crash on a document with a structured font. They have no font
+  resolver, so they now refuse it like other bad input: exit 3 with the
+  constant reason (`missing-resolver`) on stderr, instead of an uncaught
+  exception (exit 255).
+
 ## [0.8.0] - 2026-10-26
 
 **Nothing to do unless you opt in:** documents that keep string font tokens render byte-identically. To use a web font, pass a `fontResolver` that maps the reference to same-origin WOFF2 URLs you publish yourself; the renderer never fetches fonts or contacts Google.

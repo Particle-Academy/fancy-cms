@@ -41,6 +41,32 @@ final class CliTest extends TestCase
         }
     }
 
+    /**
+     * A structured font needs a host resolver, which these CLIs never have, so the
+     * document is refused. It must be refused like every other bad input: a
+     * constant reason on stderr and a non-zero code, not an uncaught exception
+     * (PHP fatal, exit 255, stack trace on stdout).
+     */
+    #[DataProvider('renderClis')]
+    public function test_cli_refuses_a_structured_font_without_a_fatal_error(string $cli): void
+    {
+        $path = tempnam(sys_get_temp_dir(), 'fancycms');
+        try {
+            file_put_contents($path, '{"version":1,"theme":{"font":{"body":{"family":"Inter","source":"bundled","weights":[400]}}},"root":"r","nodes":{"r":{"id":"r","type":"section","children":[]}}}');
+            $process = proc_open([PHP_BINARY, dirname(__DIR__).'/bin/'.$cli, $path], [1 => ['pipe', 'w'], 2 => ['pipe', 'w']], $pipes);
+            self::assertIsResource($process);
+            $out = stream_get_contents($pipes[1]);
+            $err = stream_get_contents($pipes[2]);
+            fclose($pipes[1]);
+            fclose($pipes[2]);
+            self::assertSame(3, proc_close($process), $out.$err);
+            self::assertSame('', $out);
+            self::assertSame("missing-resolver\n", $err);
+        } finally {
+            unlink($path);
+        }
+    }
+
     #[DataProvider('renderClis')]
     public function test_cli_refuses_invalid_json_without_a_fatal_error(string $cli): void
     {
