@@ -14,6 +14,8 @@ declare(strict_types=1);
 require __DIR__.'/../src/Render/CssEmitter.php';
 require __DIR__.'/../src/Render/JsValue.php';
 require __DIR__.'/../src/Render/Infographics.php';
+require __DIR__.'/../src/Render/Inputs.php';
+require __DIR__.'/../src/Data/PageInputs.php';
 require __DIR__.'/../src/Render/FontAssets.php';
 require __DIR__.'/../src/Exceptions/FontResolutionException.php';
 require __DIR__.'/../src/Document/Ordering.php';

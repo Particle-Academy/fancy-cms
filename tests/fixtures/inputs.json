@@ -1,0 +1,828 @@
+{
+  "about": "Shared PHP/React parity spec for page inputs. Byte-identical in fancy-cms and fancy-cms-ui; each repo's suite renders every case, parses and encodes every query, and must produce exactly these results.",
+  "css": "/* fancy-cms inputs */\n\n:where([data-cms-input]) {\n  display: flex;\n  flex-direction: column;\n  gap: 6px;\n}\n\n:where([data-cms-input] fieldset) {\n  border: 0;\n  display: flex;\n  flex-wrap: wrap;\n  gap: 8px 16px;\n  margin: 0;\n  min-width: 0;\n  padding: 0;\n}\n\n:where([data-cms-input] legend) {\n  font-weight: 600;\n  margin-bottom: 6px;\n  padding: 0;\n  width: 100%;\n}\n\n:where([data-cms-input] > label) {\n  font-weight: 600;\n}\n\n:where([data-cms-input] select, [data-cms-input] input[type=\"date\"]) {\n  background: transparent;\n  border: 1px solid color-mix(in srgb, currentColor 40%, transparent);\n  border-radius: 6px;\n  color: inherit;\n  font: inherit;\n  min-height: 44px;\n  padding: 8px 10px;\n}\n\n:where([data-cms-input] fieldset label) {\n  align-items: center;\n  display: inline-flex;\n  gap: 6px;\n  min-height: 44px;\n}",
+  "cases": [
+    {
+      "name": "period: presets, and the default selected",
+      "nodes": [
+        {
+          "id": "p",
+          "type": "input",
+          "parent": null,
+          "order": "a0",
+          "props": {
+            "name": "period",
+            "kind": "period",
+            "label": "Period",
+            "default": "30d"
+          },
+          "style": {
+            "base": {}
+          }
+        }
+      ],
+      "data": {},
+      "inputs": {},
+      "html": "<div data-cms=\"p\" data-cms-island=\"input\" data-cms-input=\"period\"><label for=\"cms-input-period\">Period</label><select id=\"cms-input-period\" name=\"period\"><option value=\"7d\">Last 7 days</option><option value=\"30d\" selected=\"\">Last 30 days</option><option value=\"90d\">Last 90 days</option><option value=\"12m\">Last 12 months</option></select></div>"
+    },
+    {
+      "name": "period: the requested value selected",
+      "nodes": [
+        {
+          "id": "p",
+          "type": "input",
+          "parent": null,
+          "order": "a0",
+          "props": {
+            "name": "period",
+            "kind": "period",
+            "label": "Period",
+            "default": "30d"
+          },
+          "style": {
+            "base": {}
+          }
+        }
+      ],
+      "data": {},
+      "inputs": {
+        "period": "90d"
+      },
+      "html": "<div data-cms=\"p\" data-cms-island=\"input\" data-cms-input=\"period\"><label for=\"cms-input-period\">Period</label><select id=\"cms-input-period\" name=\"period\"><option value=\"7d\">Last 7 days</option><option value=\"30d\">Last 30 days</option><option value=\"90d\" selected=\"\">Last 90 days</option><option value=\"12m\">Last 12 months</option></select></div>"
+    },
+    {
+      "name": "period: a value that is not an option falls back to the default",
+      "nodes": [
+        {
+          "id": "p",
+          "type": "input",
+          "parent": null,
+          "order": "a0",
+          "props": {
+            "name": "period",
+            "kind": "period",
+            "label": "Period",
+            "default": "30d"
+          },
+          "style": {
+            "base": {}
+          }
+        }
+      ],
+      "data": {},
+      "inputs": {
+        "period": "5y"
+      },
+      "html": "<div data-cms=\"p\" data-cms-island=\"input\" data-cms-input=\"period\"><label for=\"cms-input-period\">Period</label><select id=\"cms-input-period\" name=\"period\"><option value=\"7d\">Last 7 days</option><option value=\"30d\" selected=\"\">Last 30 days</option><option value=\"90d\">Last 90 days</option><option value=\"12m\">Last 12 months</option></select></div>"
+    },
+    {
+      "name": "person: options bound to a host list",
+      "nodes": [
+        {
+          "id": "r",
+          "type": "input",
+          "parent": null,
+          "order": "a0",
+          "props": {
+            "name": "rep",
+            "kind": "person",
+            "label": "Sales rep",
+            "options": {
+              "$bind": "lists.people"
+            },
+            "default": "ana"
+          },
+          "style": {
+            "base": {}
+          }
+        }
+      ],
+      "data": {
+        "lists": {
+          "people": [
+            {
+              "value": "ana",
+              "label": "Ana Ruiz"
+            },
+            {
+              "value": "ben",
+              "label": "Ben Okoro"
+            },
+            "Chen",
+            {
+              "value": "o'brien & co",
+              "label": "O'Brien & Co"
+            }
+          ]
+        }
+      },
+      "inputs": {
+        "rep": "ben"
+      },
+      "html": "<div data-cms=\"r\" data-cms-island=\"input\" data-cms-input=\"person\"><label for=\"cms-input-rep\">Sales rep</label><select id=\"cms-input-rep\" name=\"rep\"><option value=\"ana\">Ana Ruiz</option><option value=\"ben\" selected=\"\">Ben Okoro</option><option value=\"Chen\">Chen</option><option value=\"o&#x27;brien &amp; co\">O&#x27;Brien &amp; Co</option></select></div>"
+    },
+    {
+      "name": "person: missing host list renders the empty state",
+      "nodes": [
+        {
+          "id": "r",
+          "type": "input",
+          "parent": null,
+          "order": "a0",
+          "props": {
+            "name": "rep",
+            "kind": "person",
+            "label": "Sales rep",
+            "options": {
+              "$bind": "lists.people"
+            },
+            "default": "ana"
+          },
+          "style": {
+            "base": {}
+          }
+        }
+      ],
+      "data": {},
+      "inputs": {
+        "rep": "ben"
+      },
+      "html": "<div data-cms=\"r\" data-cms-island=\"input\" data-cms-input=\"person\"><p data-cms-empty=\"\">No options available</p></div>"
+    },
+    {
+      "name": "select: malformed bound options render the empty state with its text",
+      "nodes": [
+        {
+          "id": "s",
+          "type": "input",
+          "parent": null,
+          "order": "a0",
+          "props": {
+            "name": "region",
+            "kind": "select",
+            "label": "Region",
+            "options": {
+              "$bind": "lists.regions"
+            },
+            "emptyText": "No regions yet"
+          },
+          "style": {
+            "base": {}
+          }
+        }
+      ],
+      "data": {
+        "lists": {
+          "regions": "north,south"
+        }
+      },
+      "inputs": {},
+      "html": "<div data-cms=\"s\" data-cms-island=\"input\" data-cms-input=\"select\"><p data-cms-empty=\"\">No regions yet</p></div>"
+    },
+    {
+      "name": "select: numbers, repeats and malformed entries; no default takes the first; text is escaped",
+      "nodes": [
+        {
+          "id": "s",
+          "type": "input",
+          "parent": null,
+          "order": "a0",
+          "props": {
+            "name": "size",
+            "kind": "select",
+            "label": "Q&A <1> \"x\" 'y'",
+            "options": [
+              1,
+              2,
+              2,
+              {
+                "value": 3,
+                "label": "Three"
+              },
+              {
+                "label": "no value"
+              },
+              "",
+              null,
+              true
+            ]
+          },
+          "style": {
+            "base": {}
+          }
+        }
+      ],
+      "data": {},
+      "inputs": {},
+      "html": "<div data-cms=\"s\" data-cms-island=\"input\" data-cms-input=\"select\"><label for=\"cms-input-size\">Q&amp;A &lt;1&gt; &quot;x&quot; &#x27;y&#x27;</label><select id=\"cms-input-size\" name=\"size\"><option value=\"1\" selected=\"\">1</option><option value=\"2\">2</option><option value=\"3\">Three</option></select></div>"
+    },
+    {
+      "name": "multiselect: a partial selection, in option order, unknown values dropped",
+      "nodes": [
+        {
+          "id": "m",
+          "type": "input",
+          "parent": null,
+          "order": "a0",
+          "props": {
+            "name": "teams",
+            "kind": "multiselect",
+            "label": "Teams",
+            "options": [
+              {
+                "value": "north",
+                "label": "North"
+              },
+              {
+                "value": "south",
+                "label": "South"
+              },
+              {
+                "value": "west",
+                "label": "West"
+              }
+            ],
+            "default": [
+              "north"
+            ]
+          },
+          "style": {
+            "base": {}
+          }
+        }
+      ],
+      "data": {},
+      "inputs": {
+        "teams": [
+          "west",
+          "nope",
+          "north"
+        ]
+      },
+      "html": "<div data-cms=\"m\" data-cms-island=\"input\" data-cms-input=\"multiselect\"><fieldset><legend>Teams</legend><label><input type=\"checkbox\" name=\"teams[]\" checked=\"\" value=\"north\"/>North</label><label><input type=\"checkbox\" name=\"teams[]\" value=\"south\"/>South</label><label><input type=\"checkbox\" name=\"teams[]\" checked=\"\" value=\"west\"/>West</label></fieldset></div>"
+    },
+    {
+      "name": "multiselect: a malformed value takes the default",
+      "nodes": [
+        {
+          "id": "m",
+          "type": "input",
+          "parent": null,
+          "order": "a0",
+          "props": {
+            "name": "teams",
+            "kind": "multiselect",
+            "label": "Teams",
+            "options": [
+              {
+                "value": "north",
+                "label": "North"
+              },
+              {
+                "value": "south",
+                "label": "South"
+              },
+              {
+                "value": "west",
+                "label": "West"
+              }
+            ],
+            "default": [
+              "north"
+            ]
+          },
+          "style": {
+            "base": {}
+          }
+        }
+      ],
+      "data": {},
+      "inputs": {
+        "teams": "north"
+      },
+      "html": "<div data-cms=\"m\" data-cms-island=\"input\" data-cms-input=\"multiselect\"><fieldset><legend>Teams</legend><label><input type=\"checkbox\" name=\"teams[]\" checked=\"\" value=\"north\"/>North</label><label><input type=\"checkbox\" name=\"teams[]\" value=\"south\"/>South</label><label><input type=\"checkbox\" name=\"teams[]\" value=\"west\"/>West</label></fieldset></div>"
+    },
+    {
+      "name": "multiselect: an empty selection is a selection",
+      "nodes": [
+        {
+          "id": "m",
+          "type": "input",
+          "parent": null,
+          "order": "a0",
+          "props": {
+            "name": "teams",
+            "kind": "multiselect",
+            "label": "Teams",
+            "options": [
+              {
+                "value": "north",
+                "label": "North"
+              },
+              {
+                "value": "south",
+                "label": "South"
+              },
+              {
+                "value": "west",
+                "label": "West"
+              }
+            ],
+            "default": [
+              "north"
+            ]
+          },
+          "style": {
+            "base": {}
+          }
+        }
+      ],
+      "data": {},
+      "inputs": {
+        "teams": []
+      },
+      "html": "<div data-cms=\"m\" data-cms-island=\"input\" data-cms-input=\"multiselect\"><fieldset><legend>Teams</legend><label><input type=\"checkbox\" name=\"teams[]\" value=\"north\"/>North</label><label><input type=\"checkbox\" name=\"teams[]\" value=\"south\"/>South</label><label><input type=\"checkbox\" name=\"teams[]\" value=\"west\"/>West</label></fieldset></div>"
+    },
+    {
+      "name": "daterange: a valid range",
+      "nodes": [
+        {
+          "id": "d",
+          "type": "input",
+          "parent": null,
+          "order": "a0",
+          "props": {
+            "name": "range",
+            "kind": "daterange",
+            "label": "Dates",
+            "default": {
+              "from": "2026-01-01",
+              "to": "2026-03-31"
+            }
+          },
+          "style": {
+            "base": {}
+          }
+        }
+      ],
+      "data": {},
+      "inputs": {
+        "range": {
+          "from": "2026-04-01",
+          "to": "2026-06-30"
+        }
+      },
+      "html": "<div data-cms=\"d\" data-cms-island=\"input\" data-cms-input=\"daterange\"><fieldset><legend>Dates</legend><label for=\"cms-input-range-from\">From</label><input type=\"date\" id=\"cms-input-range-from\" name=\"range[from]\" value=\"2026-04-01\"/><label for=\"cms-input-range-to\">To</label><input type=\"date\" id=\"cms-input-range-to\" name=\"range[to]\" value=\"2026-06-30\"/></fieldset></div>"
+    },
+    {
+      "name": "daterange: an impossible date falls back to the default; labels are props",
+      "nodes": [
+        {
+          "id": "d",
+          "type": "input",
+          "parent": null,
+          "order": "a0",
+          "props": {
+            "name": "range",
+            "kind": "daterange",
+            "label": "Dates",
+            "default": {
+              "from": "2026-01-01",
+              "to": "2026-03-31"
+            },
+            "fromLabel": "Start",
+            "toLabel": "End"
+          },
+          "style": {
+            "base": {}
+          }
+        }
+      ],
+      "data": {},
+      "inputs": {
+        "range": {
+          "from": "2026-02-30",
+          "to": "2026-03-01"
+        }
+      },
+      "html": "<div data-cms=\"d\" data-cms-island=\"input\" data-cms-input=\"daterange\"><fieldset><legend>Dates</legend><label for=\"cms-input-range-from\">Start</label><input type=\"date\" id=\"cms-input-range-from\" name=\"range[from]\" value=\"2026-01-01\"/><label for=\"cms-input-range-to\">End</label><input type=\"date\" id=\"cms-input-range-to\" name=\"range[to]\" value=\"2026-03-31\"/></fieldset></div>"
+    },
+    {
+      "name": "daterange: a reversed range falls back to the default",
+      "nodes": [
+        {
+          "id": "d",
+          "type": "input",
+          "parent": null,
+          "order": "a0",
+          "props": {
+            "name": "range",
+            "kind": "daterange",
+            "label": "Dates",
+            "default": {
+              "from": "2026-01-01",
+              "to": "2026-03-31"
+            }
+          },
+          "style": {
+            "base": {}
+          }
+        }
+      ],
+      "data": {},
+      "inputs": {
+        "range": {
+          "from": "2026-06-30",
+          "to": "2026-04-01"
+        }
+      },
+      "html": "<div data-cms=\"d\" data-cms-island=\"input\" data-cms-input=\"daterange\"><fieldset><legend>Dates</legend><label for=\"cms-input-range-from\">From</label><input type=\"date\" id=\"cms-input-range-from\" name=\"range[from]\" value=\"2026-01-01\"/><label for=\"cms-input-range-to\">To</label><input type=\"date\" id=\"cms-input-range-to\" name=\"range[to]\" value=\"2026-03-31\"/></fieldset></div>"
+    },
+    {
+      "name": "daterange: a leap day is a date",
+      "nodes": [
+        {
+          "id": "d",
+          "type": "input",
+          "parent": null,
+          "order": "a0",
+          "props": {
+            "name": "range",
+            "kind": "daterange",
+            "label": "Dates",
+            "default": {
+              "from": "2026-01-01",
+              "to": "2026-03-31"
+            }
+          },
+          "style": {
+            "base": {}
+          }
+        }
+      ],
+      "data": {},
+      "inputs": {
+        "range": {
+          "from": "2028-02-29",
+          "to": "2028-03-01"
+        }
+      },
+      "html": "<div data-cms=\"d\" data-cms-island=\"input\" data-cms-input=\"daterange\"><fieldset><legend>Dates</legend><label for=\"cms-input-range-from\">From</label><input type=\"date\" id=\"cms-input-range-from\" name=\"range[from]\" value=\"2028-02-29\"/><label for=\"cms-input-range-to\">To</label><input type=\"date\" id=\"cms-input-range-to\" name=\"range[to]\" value=\"2028-03-01\"/></fieldset></div>"
+    },
+    {
+      "name": "daterange: no default and no value has no dates",
+      "nodes": [
+        {
+          "id": "d",
+          "type": "input",
+          "parent": null,
+          "order": "a0",
+          "props": {
+            "name": "range",
+            "kind": "daterange",
+            "label": "Dates"
+          },
+          "style": {
+            "base": {}
+          }
+        }
+      ],
+      "data": {},
+      "inputs": {},
+      "html": "<div data-cms=\"d\" data-cms-island=\"input\" data-cms-input=\"daterange\"><fieldset><legend>Dates</legend><label for=\"cms-input-range-from\">From</label><input type=\"date\" id=\"cms-input-range-from\" name=\"range[from]\" value=\"\"/><label for=\"cms-input-range-to\">To</label><input type=\"date\" id=\"cms-input-range-to\" name=\"range[to]\" value=\"\"/></fieldset></div>"
+    },
+    {
+      "name": "an invalid name renders the empty state",
+      "nodes": [
+        {
+          "id": "s",
+          "type": "input",
+          "parent": null,
+          "order": "a0",
+          "props": {
+            "name": "Bad Name",
+            "kind": "select",
+            "options": [
+              "a"
+            ]
+          },
+          "style": {
+            "base": {}
+          }
+        }
+      ],
+      "data": {},
+      "inputs": {},
+      "html": "<div data-cms=\"s\" data-cms-island=\"input\" data-cms-input=\"select\"><p data-cms-empty=\"\">No options available</p></div>"
+    },
+    {
+      "name": "a repeated name renders one control; the label defaults to the name",
+      "nodes": [
+        {
+          "id": "a",
+          "type": "input",
+          "parent": null,
+          "order": "a0",
+          "props": {
+            "name": "x",
+            "kind": "select",
+            "options": [
+              "one",
+              "two"
+            ]
+          },
+          "style": {
+            "base": {}
+          }
+        },
+        {
+          "id": "b",
+          "type": "input",
+          "parent": null,
+          "order": "a1",
+          "props": {
+            "name": "x",
+            "kind": "select",
+            "options": [
+              "one",
+              "two"
+            ]
+          },
+          "style": {
+            "base": {}
+          }
+        }
+      ],
+      "data": {},
+      "inputs": {
+        "x": "two"
+      },
+      "html": "<div data-cms=\"a\" data-cms-island=\"input\" data-cms-input=\"select\"><label for=\"cms-input-x\">x</label><select id=\"cms-input-x\" name=\"x\"><option value=\"one\">one</option><option value=\"two\" selected=\"\">two</option></select></div><div data-cms=\"b\" data-cms-island=\"input\" data-cms-input=\"select\"><p data-cms-empty=\"\">No options available</p></div>"
+    },
+    {
+      "name": "an unknown kind is a select",
+      "nodes": [
+        {
+          "id": "s",
+          "type": "input",
+          "parent": null,
+          "order": "a0",
+          "props": {
+            "name": "pick",
+            "kind": "slider",
+            "label": "Pick",
+            "options": [
+              "a",
+              "b"
+            ]
+          },
+          "style": {
+            "base": {}
+          }
+        }
+      ],
+      "data": {},
+      "inputs": {},
+      "html": "<div data-cms=\"s\" data-cms-island=\"input\" data-cms-input=\"select\"><label for=\"cms-input-pick\">Pick</label><select id=\"cms-input-pick\" name=\"pick\"><option value=\"a\" selected=\"\">a</option><option value=\"b\">b</option></select></div>"
+    }
+  ],
+  "query": {
+    "nodes": [
+      {
+        "id": "p",
+        "type": "input",
+        "parent": null,
+        "order": "a0",
+        "props": {
+          "name": "period",
+          "kind": "period",
+          "label": "Period",
+          "default": "30d"
+        },
+        "style": {
+          "base": {}
+        }
+      },
+      {
+        "id": "r",
+        "type": "input",
+        "parent": null,
+        "order": "a0",
+        "props": {
+          "name": "rep",
+          "kind": "person",
+          "label": "Sales rep",
+          "options": {
+            "$bind": "lists.people"
+          },
+          "default": "ana"
+        },
+        "style": {
+          "base": {}
+        }
+      },
+      {
+        "id": "m",
+        "type": "input",
+        "parent": null,
+        "order": "a0",
+        "props": {
+          "name": "teams",
+          "kind": "multiselect",
+          "label": "Teams",
+          "options": [
+            {
+              "value": "north",
+              "label": "North"
+            },
+            {
+              "value": "south",
+              "label": "South"
+            },
+            {
+              "value": "west",
+              "label": "West"
+            }
+          ],
+          "default": []
+        },
+        "style": {
+          "base": {}
+        }
+      },
+      {
+        "id": "d",
+        "type": "input",
+        "parent": null,
+        "order": "a0",
+        "props": {
+          "name": "range",
+          "kind": "daterange",
+          "label": "Dates",
+          "default": {
+            "from": "2026-01-01",
+            "to": "2026-03-31"
+          }
+        },
+        "style": {
+          "base": {}
+        }
+      }
+    ],
+    "data": {
+      "lists": {
+        "people": [
+          {
+            "value": "ana",
+            "label": "Ana Ruiz"
+          },
+          {
+            "value": "ben",
+            "label": "Ben Okoro"
+          },
+          "Chen",
+          {
+            "value": "o'brien & co",
+            "label": "O'Brien & Co"
+          }
+        ]
+      }
+    },
+    "declared": [
+      {
+        "node": "d",
+        "name": "range",
+        "kind": "daterange"
+      },
+      {
+        "node": "m",
+        "name": "teams",
+        "kind": "multiselect"
+      },
+      {
+        "node": "p",
+        "name": "period",
+        "kind": "period"
+      },
+      {
+        "node": "r",
+        "name": "rep",
+        "kind": "person"
+      }
+    ],
+    "cases": [
+      {
+        "name": "no query is the defaults",
+        "search": "",
+        "values": {
+          "period": "30d",
+          "rep": "ana",
+          "teams": [],
+          "range": {
+            "from": "2026-01-01",
+            "to": "2026-03-31"
+          }
+        },
+        "encoded": ""
+      },
+      {
+        "name": "every kind, round-tripped",
+        "search": "period=90d&rep=ben&teams[]=west&teams[]=north&range[from]=2026-04-01&range[to]=2026-06-30",
+        "values": {
+          "period": "90d",
+          "rep": "ben",
+          "teams": [
+            "north",
+            "west"
+          ],
+          "range": {
+            "from": "2026-04-01",
+            "to": "2026-06-30"
+          }
+        },
+        "encoded": "range[from]=2026-04-01&range[to]=2026-06-30&teams[]=north&teams[]=west&period=90d&rep=ben"
+      },
+      {
+        "name": "malformed and hostile parameters are the defaults",
+        "search": "period=5y&rep[]=ben&teams=north&range[from]=2026-13-01&range[to]=x&__proto__[polluted]=1&constructor=1",
+        "values": {
+          "period": "30d",
+          "rep": "ana",
+          "teams": [],
+          "range": {
+            "from": "2026-01-01",
+            "to": "2026-03-31"
+          }
+        },
+        "encoded": ""
+      },
+      {
+        "name": "a half range is the default",
+        "search": "range[from]=2026-04-01",
+        "values": {
+          "period": "30d",
+          "rep": "ana",
+          "teams": [],
+          "range": {
+            "from": "2026-01-01",
+            "to": "2026-03-31"
+          }
+        },
+        "encoded": ""
+      },
+      {
+        "name": "RFC 3986 percent-encoding both ways",
+        "search": "rep=o%27brien%20%26%20co",
+        "values": {
+          "period": "30d",
+          "rep": "o'brien & co",
+          "teams": [],
+          "range": {
+            "from": "2026-01-01",
+            "to": "2026-03-31"
+          }
+        },
+        "encoded": "rep=o%27brien%20%26%20co"
+      }
+    ],
+    "requests": [
+      {
+        "node": "r",
+        "prop": "options",
+        "path": "lists.people",
+        "expects": {
+          "type": "array",
+          "items": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "object",
+                "required": [
+                  "value"
+                ],
+                "properties": {
+                  "value": {
+                    "type": [
+                      "string",
+                      "number"
+                    ]
+                  },
+                  "label": {
+                    "type": "string"
+                  }
+                }
+              }
+            ]
+          }
+        }
+      }
+    ]
+  },
+  "styleTag": {
+    "key": "page \"1\" <&>",
+    "css": ":root {\n  --a: 1;\n}\n",
+    "html": "<style data-cms-styles=\"page &quot;1&quot; &lt;&amp;&gt;\">:root {\n  --a: 1;\n}\n</style>"
+  }
+}

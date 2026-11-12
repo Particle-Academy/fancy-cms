@@ -4,6 +4,7 @@ declare(strict_types=1);
 
 namespace FancyCms\Render;
 
+use FancyCms\Data\PageInputs;
 use FancyCms\Document\Decorative;
 use FancyCms\Document\Icons;
 use FancyCms\Document\Ordering;
@@ -22,9 +23,10 @@ final class PageRenderer
     /**
      * @param  array<string,mixed>  $doc
      * @param  array<string,mixed>  $data  data context for bindings (Phase 3)
+     * @param  array<string,mixed>  $inputs  page input values by name, e.g. PageInputs::fromQuery($doc, $request->query(), $data); normalised before use
      * @return array{html:string,css:string}
      */
-    public static function render(array $doc, array $data = [], ?callable $imageResolver = null, ?callable $fontResolver = null, string $fontDisplay = 'swap', ?IslandCatalogue $islands = null): array
+    public static function render(array $doc, array $data = [], ?callable $imageResolver = null, ?callable $fontResolver = null, string $fontDisplay = 'swap', ?IslandCatalogue $islands = null, array $inputs = []): array
     {
         $css = CssEmitter::emit($doc, $fontResolver, $fontDisplay);
         $islands ??= IslandCatalogue::builtin();
@@ -32,7 +34,7 @@ final class PageRenderer
         $preloads = [];
         $decorativeSafe = Decorative::error(is_array($doc['nodes'] ?? null) ? $doc['nodes'] : []) === null;
         foreach (self::roots($doc) as $id) {
-            $html .= self::renderNode($doc, $id, $data, $preloads, $decorativeSafe, $imageResolver, $islands);
+            $html .= self::renderNode($doc, $id, $data, $preloads, $decorativeSafe, $imageResolver, $islands, $inputs);
         }
         $hints = '';
         foreach ($preloads as $hint) {
@@ -40,6 +42,24 @@ final class PageRenderer
         }
 
         return ['html' => $hints.$html, 'css' => $css];
+    }
+
+    /**
+     * The `<style>` element for a document's CSS, for the host's `<head>`: never
+     * the body, where a `<style>` inside a `<div>` is invalid HTML (lab finding
+     * K20). Byte-identical to fancy-cms-ui's `cmsStyleTag()`; the browser
+     * renderer reuses an identical element it finds in the head. Empty CSS (an
+     * empty document) gives an empty string.
+     *
+     * @param  array<string,mixed>  $doc
+     */
+    public static function styleTag(array $doc, string $css): string
+    {
+        if ($css === '') {
+            return '';
+        }
+
+        return '<style data-cms-styles="'.self::escape(is_string($doc['id'] ?? null) ? $doc['id'] : '').'">'.$css.'</style>';
     }
 
     /**
@@ -86,7 +106,7 @@ final class PageRenderer
     /**
      * @param  array<string,mixed>  $doc
      */
-    private static function renderNode(array $doc, string $id, array $data, array &$preloads, bool $decorativeSafe, ?callable $imageResolver, IslandCatalogue $islands): string
+    private static function renderNode(array $doc, string $id, array $data, array &$preloads, bool $decorativeSafe, ?callable $imageResolver, IslandCatalogue $islands, array $inputs = []): string
     {
         $node = $doc['nodes'][$id] ?? null;
         if ($node === null) {
@@ -193,9 +213,20 @@ final class PageRenderer
                 $resolved[$key] = self::resolve($value, $data);
             }
             $inner = Infographics::inner($type, $resolved);
+        } elseif ($type === 'input') {
+            $resolved = [];
+            foreach ($props as $key => $value) {
+                $resolved[$key] = self::resolve($value, $data);
+            }
+            $name = is_string($resolved['name'] ?? null) ? $resolved['name'] : '';
+            $declared = false;
+            foreach (PageInputs::declared($doc) as $decl) {
+                $declared = $declared || ($decl['node'] === (string) ($node['id'] ?? $id) && $decl['name'] === $name);
+            }
+            $inner = Inputs::inner($resolved, array_key_exists($name, $inputs) ? $inputs[$name] : null, $declared);
         } elseif (! $isIsland || in_array($type, ['section', 'stack', 'grid', 'frame', 'shape', 'card'], true)) {
             foreach (self::childrenOf($doc, $id) as $childId) {
-                $inner .= self::renderNode($doc, $childId, $data, $preloads, $decorativeSafe, $imageResolver, $islands);
+                $inner .= self::renderNode($doc, $childId, $data, $preloads, $decorativeSafe, $imageResolver, $islands, $inputs);
             }
         }
 
@@ -259,6 +290,9 @@ final class PageRenderer
         }
         if (Infographics::isType($type)) {
             return Infographics::element($type, $props, $text);
+        }
+        if ($type === 'input') {
+            return Inputs::element($props, $text);
         }
         if ($type === 'callout') {
             $variant = $text($props['variant'] ?? null);

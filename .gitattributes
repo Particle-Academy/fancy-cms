@@ -9,3 +9,6 @@ fonts/**/NOTICE text eol=lf
 resources/islands/*.json text eol=lf
 tests/fixtures/infographics.json text eol=lf
 src/Render/Infographics.php text eol=lf
+tests/fixtures/inputs.json text eol=lf
+src/Render/Inputs.php text eol=lf
+tests/fixtures/data-queries.json text eol=lf

@@ -340,5 +340,14 @@ final class Schema
                 }
             }
         }
+        // Charlotte's query keys: carried through to DataRequests, never interpreted here.
+        foreach (['$params', '$scope'] as $key) {
+            if (array_key_exists($key, $binding)) {
+                $value = $binding[$key] instanceof stdClass ? (array) $binding[$key] : $binding[$key];
+                if (! is_array($value) || ($value !== [] && array_is_list($value))) {
+                    $this->error($path.'.'.$key, 'object', $binding[$key]);
+                }
+            }
+        }
     }
 }

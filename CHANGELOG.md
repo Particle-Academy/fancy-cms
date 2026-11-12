@@ -18,9 +18,40 @@ upgrading.
 **BREAKING only if your documents already use a node type named `chart`,
 `kpi`, `table` or `leaderboard`** for something of your own: those are now
 native node types in `PageDoc::NODE_TYPES`. Rename yours (a namespaced island
-such as `kit:Chart`). Everyone else: nothing to do.
+such as `kit:Chart`). Everyone else: nothing to do. The same holds for `input`.
 
 ### Added
+
+- **Page inputs** (phase 2 of report dashboards): an `input` node (`period`,
+  `daterange`, `person`, `select`, `multiselect`) with a `name`, a `default` and
+  literal or `$bind`-ed options, rendered by `PageRenderer` as native labelled
+  controls, byte-identical to `@particle-academy/fancy-cms-ui` (shared spec
+  `tests/fixtures/inputs.json`). `PageRenderer::render(..., inputs: $values)`
+  renders the values the data was fetched for.
+- `Data\PageInputs`: `declared()`, `values()`, `fromQuery($doc, $request->query(), $data)`
+  and `toQuery()`. A value that is not an option, an impossible date or a
+  reversed range falls back to the default, so a URL cannot put the page in a
+  state its controls cannot show. Identical to fancy-cms-ui's functions.
+- **Charlotte's binding keys, carried natively.** `DataRequests::of()` returns
+  a binding's `$params` and `$scope`. `DataRequests::queries($doc, $inputs, $data)`
+  returns one request per distinct `(stream, alias, params, scope)`, keyed by
+  the path's first segment (`<stream>` or `<stream>#<alias>`, whose result the
+  host puts in `$data` under that key), with every `{"$input": name}` filled
+  from the page's input values and the inputs each query reads. fancy-cms never
+  interprets a scope: the host applies it against the viewer. The schema
+  refuses a non-object `$params` / `$scope` where it checks a binding
+  (`repeat.each`). Shared spec `tests/fixtures/data-queries.json`.
+- `PageRenderer::styleTag($doc, $css)`: the page's `<style>` for the host's
+  `<head>`, byte-identical to fancy-cms-ui's `cmsStyleTag()`, which the browser
+  renderer reuses instead of adding a second (lab finding K20: the React side
+  used to put it inside the host's `<div>`).
+- `bin/render-html.php` takes page input values as a 4th argument, for the
+  cross-engine parity harness.
+
+### Changed
+
+- The built-in island catalogue's byte budget is 6000 (was 5000): `input` and
+  the `$params` / `$scope` binding keys cost 1273 bytes after trimming.
 
 - **Infographic node kit**, rendered by `PageRenderer`: `chart` (column, bar,
   line, pie, funnel; the server renders an accessible data table, and the

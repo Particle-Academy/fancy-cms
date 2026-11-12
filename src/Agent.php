@@ -111,7 +111,7 @@ final class Agent
                 'richtext is excluded: host-authored HTML only. Hosts must exclude that type from untrusted tools or sanitize it before browser rendering.',
                 'Motion, actions and repeater behavior require the browser runtime. PHP renders native static elements; richtext HTML is not emitted by PHP.',
                 'Changes use node:<URL-encoded id> and page:<URL-encoded doc.id> handles. Pin writes to the observed revision; after surface_changed_under_you read changes and preserve human edits.',
-                'islands lists component types as JSON Schema. Place one as a node of that type; island:true is implied. chart/kpi/table/leaderboard carry the shape and $bind the numbers from host data; never type numbers in. Missing data renders an empty state.',
+                'islands lists component types as JSON Schema. Place one as a node of that type; island:true is implied. chart/kpi/table/leaderboard carry the shape and $bind the numbers from host data; never type numbers in. Missing data renders an empty state. input nodes are page inputs: a binding\'s $params or $scope value {"$input": name} takes that input\'s value.',
             ],
             'islands' => $islands->toArray(),
         ];

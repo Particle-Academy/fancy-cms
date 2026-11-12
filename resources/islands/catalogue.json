@@ -5,8 +5,10 @@
       "type": "object",
       "required": ["$bind"],
       "properties": {
-        "$bind": { "type": "string", "description": "dot.path into the host data context" },
-        "$source": { "type": "array", "items": { "type": ["string", "number"] }, "description": "live query key" }
+        "$bind": { "type": "string", "description": "dot.path into the host data context; first segment <stream> or <stream>#<alias>" },
+        "$source": { "type": "array", "items": { "type": ["string", "number"] }, "description": "live query key" },
+        "$params": { "type": "object", "description": "stream params" },
+        "$scope": { "type": "object", "description": "scope; the host narrows it to the viewer. Values may be {\"$input\": name}" }
       }
     },
     "Text": { "anyOf": [{ "type": "string" }, { "$ref": "#/$defs/Binding" }] },
@@ -119,6 +121,31 @@
         }
       },
       "example": { "rows": { "$bind": "contest.entries" }, "valueKey": "points", "limit": 5 }
+    },
+    "input": {
+      "description": "Page input. Its value is part of the data request; a change re-requests it and redraws bound nodes.",
+      "hydrate": "lazy",
+      "props": {
+        "type": "object",
+        "required": ["name", "kind"],
+        "properties": {
+          "name": { "type": "string", "pattern": "^[a-z][a-z0-9-]{0,47}$", "description": "unique; {\"$input\": name} reads it" },
+          "kind": { "enum": ["period", "daterange", "person", "select", "multiselect"], "description": "period presets: 7d 30d 90d 12m" },
+          "label": { "$ref": "#/$defs/Text" },
+          "options": {
+            "anyOf": [
+              { "type": "array", "items": { "anyOf": [{ "type": "string" }, { "type": "object", "required": ["value"], "properties": { "value": { "type": ["string", "number"] }, "label": { "type": "string" } } }] } },
+              { "$ref": "#/$defs/Binding" }
+            ],
+            "description": "bind to a host list"
+          },
+          "default": { "description": "option value; list for multiselect; {from, to} dates for daterange" },
+          "fromLabel": { "$ref": "#/$defs/Text" },
+          "toLabel": { "$ref": "#/$defs/Text" },
+          "emptyText": { "$ref": "#/$defs/emptyText" }
+        }
+      },
+      "example": { "name": "team", "kind": "person", "label": "Team", "options": { "$bind": "lists.teams" }, "default": "all" }
     }
   }
 }

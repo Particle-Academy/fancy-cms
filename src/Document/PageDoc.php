@@ -9,7 +9,7 @@ use FancyCms\Exceptions\SchemaException;
 /** Server storage boundary. Host addon registries supply their known types. */
 final class PageDoc
 {
-    public const NODE_TYPES = ['section', 'stack', 'grid', 'frame', 'shape', 'card', 'text', 'heading', 'richtext', 'link', 'list', 'divider', 'callout', 'code', 'button', 'image', 'repeater', 'icon', 'chart', 'kpi', 'table', 'leaderboard'];
+    public const NODE_TYPES = ['section', 'stack', 'grid', 'frame', 'shape', 'card', 'text', 'heading', 'richtext', 'link', 'list', 'divider', 'callout', 'code', 'button', 'image', 'repeater', 'icon', 'chart', 'kpi', 'table', 'leaderboard', 'input'];
 
     public static function validate(mixed $doc, ?array $knownTypes = null): array
     {

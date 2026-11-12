@@ -10,6 +10,8 @@ require __DIR__.'/../src/Exceptions/FontResolutionException.php';
 require __DIR__.'/../src/Render/ImageAssets.php';
 require __DIR__.'/../src/Render/PageRenderer.php';
 require __DIR__.'/../src/Render/Infographics.php';
+require __DIR__.'/../src/Render/Inputs.php';
+require __DIR__.'/../src/Data/PageInputs.php';
 require __DIR__.'/../src/Render/NumberFormat.php';
 require __DIR__.'/../src/Islands/IslandCatalogue.php';
 require __DIR__.'/../src/Document/Ordering.php';
@@ -23,7 +25,7 @@ use FancyCms\Render\PageRenderer;
 
 $path = $argv[1] ?? null;
 if ($path === null || ! is_file($path)) {
-    fwrite(STDERR, "usage: php bin/render-html.php <doc.json> [host-assets.json] [data.json]\n");
+    fwrite(STDERR, "usage: php bin/render-html.php <doc.json> [host-assets.json] [data.json] [inputs.json]\n");
     exit(2);
 }
 try {
@@ -63,8 +65,22 @@ if (isset($argv[3])) {
         exit(2);
     }
 }
+// Optional page input values (PageInputs), decoded the same way.
+$inputs = [];
+if (isset($argv[4])) {
+    try {
+        $decoded = is_file($argv[4]) ? json_decode((string) file_get_contents($argv[4]), false, 512, JSON_THROW_ON_ERROR) : null;
+        if (! $decoded instanceof stdClass) {
+            throw new InvalidArgumentException('inputs must be an object');
+        }
+        $inputs = (array) $decoded;
+    } catch (JsonException|InvalidArgumentException) {
+        fwrite(STDERR, "invalid inputs\n");
+        exit(2);
+    }
+}
 try {
-    echo PageRenderer::render($doc, $data, static fn (string $handle): mixed => $manifest[$handle] ?? null)['html'];
+    echo PageRenderer::render($doc, $data, static fn (string $handle): mixed => $manifest[$handle] ?? null, inputs: $inputs)['html'];
 } catch (FontResolutionException $e) {
     // A structured font needs a host resolver, which this CLI has none of.
     fwrite(STDERR, $e->reason."\n");

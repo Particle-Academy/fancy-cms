@@ -104,7 +104,16 @@ final class CssEmitter
             }
         }
 
-        return implode("\n\n", [self::BASE_CSS, ...($infographics ? [Infographics::CSS] : []), ...$blocks])."\n";
+        // The same for page inputs.
+        $inputs = false;
+        foreach ($doc['nodes'] ?? [] as $node) {
+            if ((is_array($node) || $node instanceof \stdClass) && (((array) $node)['type'] ?? null) === 'input') {
+                $inputs = true;
+                break;
+            }
+        }
+
+        return implode("\n\n", [self::BASE_CSS, ...($infographics ? [Infographics::CSS] : []), ...($inputs ? [Inputs::CSS] : []), ...$blocks])."\n";
     }
 
     private static function selectorFor(string $id): string

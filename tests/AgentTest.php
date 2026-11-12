@@ -45,6 +45,9 @@ final class AgentTest extends TestCase
         self::assertLessThanOrEqual(8000, strlen(json_encode($catalogue, JSON_THROW_ON_ERROR)), 'Catalogue byte cost is a release metric.');
         // The built-in island schemas are budgeted separately: a host's own
         // islands add to this, and only the host can bound those.
-        self::assertLessThanOrEqual(5000, strlen(json_encode($islands, JSON_THROW_ON_ERROR)), 'Built-in island catalogue byte cost is a release metric.');
+        // 5000 held the four infographic types (4640 bytes). Page inputs and the
+        // $params/$scope binding keys took it to 5913 after trimming every
+        // description (2026-11-12); a sixth type should earn its bytes the same way.
+        self::assertLessThanOrEqual(6000, strlen(json_encode($islands, JSON_THROW_ON_ERROR)), 'Built-in island catalogue byte cost is a release metric.');
     }
 }
