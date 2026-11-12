@@ -1,0 +1,78 @@
+{
+  "about": "Shared PHP/React parity spec for long unbroken tokens (lab finding S11). Byte-identical in fancy-cms and fancy-cms-ui. The base stylesheet must carry `rule` exactly; every case's nodes must render exactly `html`, and `wraps` says whether the node's own element is matched by the rule. `styles` are the authored overflowWrap values and the declarations each must emit (after the base stylesheet), refusals included.",
+  "rule": ":where(h1, h2, h3, h4, h5, h6, p, ul, ol, a:not([data-cms-button]), span, [data-cms-callout])[data-cms] {\n  overflow-wrap: anywhere;\n}",
+  "cases": [
+    {
+      "name": "text holding the token hostile-facts measured at 380px",
+      "wraps": true,
+      "nodes": [
+        { "id": "t", "type": "text", "parent": null, "order": "a0", "props": { "content": "<script>window.__pwned=1</script>Buttons since 1999" }, "style": { "base": {} } }
+      ],
+      "html": "<p data-cms=\"t\">&lt;script&gt;window.__pwned=1&lt;/script&gt;Buttons since 1999</p>"
+    },
+    {
+      "name": "heading",
+      "wraps": true,
+      "nodes": [
+        { "id": "h", "type": "heading", "parent": null, "order": "a0", "props": { "content": "Supercalifragilisticexpialidocious-and-then-some", "level": 1 }, "style": { "base": {} } }
+      ],
+      "html": "<h1 data-cms=\"h\">Supercalifragilisticexpialidocious-and-then-some</h1>"
+    },
+    {
+      "name": "list items inherit from the list",
+      "wraps": true,
+      "nodes": [
+        { "id": "l", "type": "list", "parent": null, "order": "a0", "props": { "items": ["https://example.com/a/very/long/path/with/no/breaks/at/all"] }, "style": { "base": {} } }
+      ],
+      "html": "<ul data-cms=\"l\"><li>https://example.com/a/very/long/path/with/no/breaks/at/all</li></ul>"
+    },
+    {
+      "name": "a link with an href",
+      "wraps": true,
+      "nodes": [
+        { "id": "k", "type": "link", "parent": null, "order": "a0", "props": { "content": "https://example.com/a/very/long/path/with/no/breaks/at/all", "href": "/a" }, "style": { "base": {} } }
+      ],
+      "html": "<a data-cms=\"k\" href=\"/a\">https://example.com/a/very/long/path/with/no/breaks/at/all</a>"
+    },
+    {
+      "name": "a link without an href is a span",
+      "wraps": true,
+      "nodes": [
+        { "id": "s", "type": "link", "parent": null, "order": "a0", "props": { "content": "AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA" }, "style": { "base": {} } }
+      ],
+      "html": "<span data-cms=\"s\">AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA</span>"
+    },
+    {
+      "name": "callout",
+      "wraps": true,
+      "nodes": [
+        { "id": "c", "type": "callout", "parent": null, "order": "a0", "props": { "content": "AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA", "variant": "warning" }, "style": { "base": {} } }
+      ],
+      "html": "<div data-cms=\"c\" data-cms-callout=\"warning\">AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA</div>"
+    },
+    {
+      "name": "a button keeps its label whole",
+      "wraps": false,
+      "nodes": [
+        { "id": "b", "type": "button", "parent": null, "order": "a0", "props": { "label": "Subscribe", "href": "/go" }, "style": { "base": {} } }
+      ],
+      "html": "<a data-cms=\"b\" href=\"/go\" data-cms-button=\"primary\">Subscribe</a>"
+    },
+    {
+      "name": "a container is not a text node",
+      "wraps": false,
+      "nodes": [
+        { "id": "g", "type": "stack", "layout": "stack", "parent": null, "order": "a0", "props": {}, "style": { "base": {} } }
+      ],
+      "html": "<div data-cms=\"g\"></div>"
+    }
+  ],
+  "styles": [
+    { "name": "normal opts a node out", "style": { "overflowWrap": "normal" }, "css": "[data-cms=\"a\"] {\n  overflow-wrap: normal;\n}\n" },
+    { "name": "break-word", "style": { "overflowWrap": "break-word" }, "css": "[data-cms=\"a\"] {\n  overflow-wrap: break-word;\n}\n" },
+    { "name": "anywhere", "style": { "overflowWrap": "anywhere" }, "css": "[data-cms=\"a\"] {\n  overflow-wrap: anywhere;\n}\n" },
+    { "name": "an unknown keyword is dropped", "style": { "overflowWrap": "break-all" }, "css": "" },
+    { "name": "a value trying to close its rule is dropped", "style": { "overflowWrap": "normal; } body { display: none" }, "css": "" },
+    { "name": "a non-string is dropped", "style": { "overflowWrap": 1 }, "css": "" }
+  ]
+}

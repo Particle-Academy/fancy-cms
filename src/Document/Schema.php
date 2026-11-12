@@ -182,7 +182,7 @@ final class Schema
         $lengths = ['padding', 'paddingX', 'paddingY', 'margin', 'marginX', 'marginY', 'radius', 'maxWidth', 'minHeight', 'fontSize', 'letterSpacing', 'gap', 'columnMin'];
         $strings = ['aspectRatio', 'background', 'backgroundPosition', 'color', 'fontFamily', 'border', 'boxShadow', 'transform', 'filter'];
         $numbers = ['zIndex', 'opacity', 'fontWeight', 'lineHeight', 'columns'];
-        $enums = ['overflow' => ['visible', 'hidden', 'auto'], 'backgroundSize' => ['cover', 'contain', 'auto'], 'textTransform' => ['none', 'uppercase', 'lowercase', 'capitalize'], 'textAlign' => ['left', 'center', 'right', 'justify'], 'direction' => ['row', 'column'], 'align' => ['start', 'center', 'end', 'stretch'], 'justify' => ['start', 'center', 'end', 'between', 'around']];
+        $enums = ['overflow' => ['visible', 'hidden', 'auto'], 'backgroundSize' => ['cover', 'contain', 'auto'], 'textTransform' => ['none', 'uppercase', 'lowercase', 'capitalize'], 'textAlign' => ['left', 'center', 'right', 'justify'], 'overflowWrap' => ['normal', 'break-word', 'anywhere'], 'direction' => ['row', 'column'], 'align' => ['start', 'center', 'end', 'stretch'], 'justify' => ['start', 'center', 'end', 'between', 'around']];
         foreach ($style as $key => $value) {
             // Null remains data in merge patches; both emitters omit it.
             if ($value === null) {

@@ -55,6 +55,7 @@ final class Agent
         $style += [
             'overflow' => ['visible', 'hidden', 'auto'], 'backgroundSize' => ['cover', 'contain', 'auto'],
             'textTransform' => ['none', 'uppercase', 'lowercase', 'capitalize'], 'textAlign' => ['left', 'center', 'right', 'justify'],
+            'overflowWrap' => ['normal', 'break-word', 'anywhere'],
             'direction' => ['row', 'column'], 'align' => ['start', 'center', 'end', 'stretch'], 'justify' => ['start', 'center', 'end', 'between', 'around'],
         ];
 

@@ -14,6 +14,8 @@ final class CssEmitter
     public const BASE_CSS = "/* fancy-cms base */\n\n".
         ":where([data-cms]) {\n  box-sizing: border-box;\n}\n\n".
         ":where(h1, h2, h3, h4, h5, h6, p, ul, ol)[data-cms] {\n  margin: 0;\n}\n\n".
+        // S11: `anywhere`, not `break-word`, so a long token also stops widening grid tracks and flex items.
+        ":where(h1, h2, h3, h4, h5, h6, p, ul, ol, a:not([data-cms-button]), span, [data-cms-callout])[data-cms] {\n  overflow-wrap: anywhere;\n}\n\n".
         ":where(ul, ol)[data-cms] {\n  padding-left: 1.25em;\n}\n\n".
         ":where(a[data-cms]) {\n  color: inherit;\n}\n\n".
         ":where([data-react-fancy-icon]) {\n  display: inline-flex;\n  align-items: center;\n  justify-content: center;\n  flex-shrink: 0;\n  width: 1em;\n  height: 1em;\n  vertical-align: middle;\n}\n\n".
@@ -236,7 +238,7 @@ final class CssEmitter
             $v = (float) $s['zIndex'];
             $d['z-index'] = JsValue::number($v < 0 ? ceil($v) : floor($v));
         }
-        foreach (['overflow' => ['overflow', ['visible', 'hidden', 'auto']], 'backgroundSize' => ['background-size', ['cover', 'contain', 'auto']], 'textTransform' => ['text-transform', ['none', 'uppercase', 'lowercase', 'capitalize']], 'textAlign' => ['text-align', ['left', 'center', 'right', 'justify']]] as $key => [$prop, $allowed]) {
+        foreach (['overflow' => ['overflow', ['visible', 'hidden', 'auto']], 'backgroundSize' => ['background-size', ['cover', 'contain', 'auto']], 'textTransform' => ['text-transform', ['none', 'uppercase', 'lowercase', 'capitalize']], 'textAlign' => ['text-align', ['left', 'center', 'right', 'justify']], 'overflowWrap' => ['overflow-wrap', ['normal', 'break-word', 'anywhere']]] as $key => [$prop, $allowed]) {
             if (isset($s[$key]) && in_array($s[$key], $allowed, true)) {
                 $d[$prop] = $s[$key];
             }

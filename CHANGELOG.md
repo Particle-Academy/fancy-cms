@@ -93,6 +93,16 @@ such as `kit:Chart`). Everyone else: nothing to do. The same holds for `input`.
   chart table's `width: 100%` came after the screen-reader rule at the same
   specificity), so a page with a chart scrolled sideways on a phone. It is 1px
   wide again; byte-identical to fancy-cms-ui (shared `infographics.json` css).
+- **A long unbroken token scrolled the page sideways on a phone** (lab finding
+  S11: hostile-facts measured 380 px wide at 375 px). `CssEmitter::BASE_CSS`
+  gives text-bearing nodes (headings, text, lists, links, callouts)
+  `overflow-wrap: anywhere`: `anywhere`, not `break-word`, because only
+  `anywhere` lowers min-content width, which grid tracks and flex items are
+  sized from. Text that fits lays out exactly as before; buttons keep their
+  labels whole. New style key `overflowWrap` (`normal` | `break-word` |
+  `anywhere`), validated by the schema, listed by `Agent::describe()`, and
+  dropped by the emitter for any other value. Byte-identical to fancy-cms-ui
+  (shared `tests/fixtures/text-wrap.json`). Consumers do nothing.
 
 ### Security
 
