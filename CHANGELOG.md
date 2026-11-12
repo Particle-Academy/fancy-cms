@@ -111,6 +111,14 @@ such as `kit:Chart`). Everyone else: nothing to do. The same holds for `input`.
   string, hit PCRE's limit and returned an empty string. Output is unchanged; a
   finite number has at most about 330 digits, so no rendered page was affected.
   Mirrors fancy-cms-ui's fix for CodeQL `js/polynomial-redos`.
+- **`JsValue::trim` is a loop**, not a `^[…]+|[…]+$` regex. It trims an
+  author-written `href` (and a heading `level`), so it handles consumer input.
+  With PCRE's JIT the regex happened to run in linear time. Without it
+  (`pcre.jit=0`, or when JIT memory cannot be allocated) a 100k whitespace run
+  inside an href took 105 s, and a 1M run hit the backtrack limit and returned
+  an empty string, so the link silently rendered as a `<span>`. It trims
+  exactly the same 25 code points as JavaScript's `String.prototype.trim`, and
+  invalid UTF-8 still gives `''`. Nothing to do as a consumer.
 
 ## [0.8.1] - 2026-10-26
 
