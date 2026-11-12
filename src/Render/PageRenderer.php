@@ -49,7 +49,8 @@ final class PageRenderer
      * the body, where a `<style>` inside a `<div>` is invalid HTML (lab finding
      * K20). Byte-identical to fancy-cms-ui's `cmsStyleTag()`; the browser
      * renderer reuses an identical element it finds in the head. Empty CSS (an
-     * empty document) gives an empty string.
+     * empty document) gives an empty string. Safe for any `$css`: it goes
+     * through {@see self::styleText()}, so a caller's CSS cannot close the element.
      *
      * @param  array<string,mixed>  $doc
      */
@@ -59,7 +60,21 @@ final class PageRenderer
             return '';
         }
 
-        return '<style data-cms-styles="'.self::escape(is_string($doc['id'] ?? null) ? $doc['id'] : '').'">'.$css.'</style>';
+        return '<style data-cms-styles="'.self::escape(is_string($doc['id'] ?? null) ? $doc['id'] : '').'">'.self::styleText($css).'</style>';
+    }
+
+    /**
+     * CSS made safe as the raw text of a `<style>` element, byte-identical to
+     * fancy-cms-ui's `styleText()`. Every `<` that starts `</` or `<!` becomes
+     * the CSS hex escape `\3C ` (the space ends the escape and is consumed by the
+     * CSS tokenizer), so no `</style` in any case can end the element and no
+     * `<!--` survives. The escape means `<` in a string, an identifier, an
+     * unquoted `url()` or a comment, so the CSS still says what it said there.
+     * Any other `<` (a media range such as `width < 600px`) is left alone.
+     */
+    public static function styleText(string $css): string
+    {
+        return str_replace(['</', '<!'], ['\3C /', '\3C !'], $css);
     }
 
     /**

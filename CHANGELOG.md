@@ -94,6 +94,24 @@ such as `kit:Chart`). Everyone else: nothing to do. The same holds for `input`.
   specificity), so a page with a chart scrolled sideways on a phone. It is 1px
   wide again; byte-identical to fancy-cms-ui (shared `infographics.json` css).
 
+### Security
+
+- **`PageRenderer::styleTag($doc, $css)` can no longer be closed early by its
+  `$css`.** It is public, so a host can pass CSS that did not come from the
+  emitter, and it wrote that CSS raw into `<style>…</style>`: a
+  `</style><script>` in it ended the element. Every `<` that starts `</` or
+  `<!` is now written as the CSS escape `\3C ` (new `PageRenderer::styleText`),
+  so no `</style` in any case and no `<!--` reaches the HTML, and the CSS still
+  means the same thing in a string, identifier, `url()` or comment. CSS from
+  `CssEmitter` is unchanged byte for byte. Byte-identical to fancy-cms-ui's
+  `styleTagHtml` (shared fixture `tests/fixtures/inputs.json`,
+  `styleTagHostile`). Nothing to do as a consumer.
+- **Number formatting groups thousands with a loop**, not the lookahead regex
+  it used, which is quadratic in the number of digits and, on a 100k-digit
+  string, hit PCRE's limit and returned an empty string. Output is unchanged; a
+  finite number has at most about 330 digits, so no rendered page was affected.
+  Mirrors fancy-cms-ui's fix for CodeQL `js/polynomial-redos`.
+
 ## [0.8.1] - 2026-10-26
 
 **Nothing to do:** a documentation addition and a CLI fix. The renderer API is unchanged.

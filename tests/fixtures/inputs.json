@@ -824,5 +824,37 @@
     "key": "page \"1\" <&>",
     "css": ":root {\n  --a: 1;\n}\n",
     "html": "<style data-cms-styles=\"page &quot;1&quot; &lt;&amp;&gt;\">:root {\n  --a: 1;\n}\n</style>"
-  }
+  },
+  "styleTagHostile": [
+    {
+      "key": "x",
+      "css": "</style><script>alert(1)</script>",
+      "html": "<style data-cms-styles=\"x\">\\3C /style><script>alert(1)\\3C /script></style>"
+    },
+    {
+      "key": "x",
+      "css": "a{}</STYLE ><img src=x onerror=alert(1)></sTyLe/>",
+      "html": "<style data-cms-styles=\"x\">a{}\\3C /STYLE ><img src=x onerror=alert(1)>\\3C /sTyLe/></style>"
+    },
+    {
+      "key": "x",
+      "css": "<!-- a{} -->",
+      "html": "<style data-cms-styles=\"x\">\\3C !-- a{} --></style>"
+    },
+    {
+      "key": "x",
+      "css": "a::after {\n  content: \"</style>\";\n}\n",
+      "html": "<style data-cms-styles=\"x\">a::after {\n  content: \"\\3C /style>\";\n}\n</style>"
+    },
+    {
+      "key": "x",
+      "css": "<</style",
+      "html": "<style data-cms-styles=\"x\"><\\3C /style</style>"
+    },
+    {
+      "key": "x",
+      "css": "@media (width < 600px) {\n  a {\n    color: red;\n  }\n}\n",
+      "html": "<style data-cms-styles=\"x\">@media (width < 600px) {\n  a {\n    color: red;\n  }\n}\n</style>"
+    }
+  ]
 }

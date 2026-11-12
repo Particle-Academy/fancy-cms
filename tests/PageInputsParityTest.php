@@ -113,6 +113,53 @@ final class PageInputsParityTest extends TestCase
         self::assertSame('', PageRenderer::styleTag(['id' => 'x'], ''));
     }
 
+    /** @return iterable<string,array{object}> */
+    public static function hostileStyleTags(): iterable
+    {
+        foreach (self::fixture()->styleTagHostile as $tag) {
+            yield json_encode($tag->css, JSON_THROW_ON_ERROR) => [$tag];
+        }
+    }
+
+    /**
+     * styleTag is public, so a host can hand it any CSS, not only the
+     * emitter's. Whatever the CSS says, the element must be one <style> that an
+     * HTML5 parser closes where we close it.
+     */
+    #[DataProvider('hostileStyleTags')]
+    public function test_hostile_css_cannot_close_the_head_style_element(object $tag): void
+    {
+        $html = PageRenderer::styleTag(['id' => $tag->key], $tag->css);
+        self::assertSame($tag->html, $html);
+        self::assertStringNotContainsString('</style', strtolower(substr($html, 0, -strlen('</style>'))));
+        self::assertStringNotContainsString('<!--', $html);
+
+        $dom = \Dom\HTMLDocument::createFromString(
+            '<!doctype html><html><head>'.$html.'<meta name="after"></head><body></body></html>',
+            LIBXML_NOERROR,
+        );
+        $styles = $dom->querySelectorAll('style');
+        self::assertCount(1, $styles);
+        self::assertNull($dom->querySelector('script, img'));
+        self::assertSame(PageRenderer::styleText($tag->css), $styles->item(0)->textContent);
+        self::assertSame('after', $styles->item(0)->nextElementSibling?->getAttribute('name'));
+    }
+
+    public function test_the_hostile_fixture_covers_the_named_cases(): void
+    {
+        $all = implode("\n", array_map(static fn (object $t): string => $t->css, self::fixture()->styleTagHostile));
+        self::assertStringContainsString('</style><script>', $all);
+        self::assertStringContainsString('</STYLE', $all);
+        self::assertStringContainsString('<!--', $all);
+    }
+
+    public function test_style_text_writes_the_css_escape_for_less_than(): void
+    {
+        self::assertSame(chr(92).'3C /', PageRenderer::styleText('</'));
+        $css = ":where([data-cms] > img) {\n  width: 100%;\n}\n";
+        self::assertSame($css, PageRenderer::styleText($css));
+    }
+
     public function test_the_page_stylesheet_is_for_the_head_and_never_in_the_html(): void
     {
         $doc = self::doc(self::fixture()->cases[0]->nodes);

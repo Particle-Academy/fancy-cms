@@ -99,10 +99,10 @@ final class NumberFormat
             $int = self::stripLeading(substr($keep, 0, strlen($keep) - $places));
             $frac = (string) substr($keep, strlen($keep) - $places);
         }
-        $frac = $fixed ? str_pad($frac, $places, '0') : rtrim($frac, '0');
+        $frac = $fixed ? str_pad($frac, $places, '0') : self::trimTrailingZeros($frac);
         $zero = preg_match('/\A0*\z/', $int.$frac) === 1;
         $negative = $negative && ! $zero;
-        $body = preg_replace('/\B(?=(\d{3})+(?!\d))/', ',', $int).($frac !== '' ? '.'.$frac : '');
+        $body = self::groupThousands($int).($frac !== '' ? '.'.$frac : '');
         $sign = $negative ? '-' : '';
         $text = match ($spec['format']) {
             'percent' => $sign.$body.'%',
@@ -137,6 +137,36 @@ final class NumberFormat
         }
 
         return [$negative, self::stripLeading($int), $frac];
+    }
+
+    /**
+     * The digits without their trailing zeros: `rtrim`, which is linear. The
+     * JavaScript twin uses a loop where it once had the quadratic `/0+$/`.
+     *
+     * @internal public for the linear-time test only.
+     */
+    public static function trimTrailingZeros(string $digits): string
+    {
+        return rtrim($digits, '0');
+    }
+
+    /**
+     * Integer digits with a `,` every three from the right. A loop, not the
+     * lookahead regex this used to be, which rescans to the end of the string
+     * from every position and so is quadratic in the number of digits.
+     *
+     * @internal public for the linear-time test only.
+     */
+    public static function groupThousands(string $int): string
+    {
+        $length = strlen($int);
+        $head = $length % 3 ?: 3;
+        $parts = [substr($int, 0, $head)];
+        for ($i = $head; $i < $length; $i += 3) {
+            $parts[] = substr($int, $i, 3);
+        }
+
+        return implode(',', $parts);
     }
 
     private static function stripLeading(string $int): string
