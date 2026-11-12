@@ -167,6 +167,10 @@ final class Infographics
   width: 100%;
 }
 
+:where(figure[data-cms-chart] table[data-cms-sr]) {
+  width: 1px;
+}
+
 :where([data-cms-table] caption) {
   caption-side: top;
   color: var(--cms-ig-muted);

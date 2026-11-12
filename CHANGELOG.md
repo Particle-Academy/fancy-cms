@@ -48,6 +48,13 @@ such as `kit:Chart`). Everyone else: nothing to do. The same holds for `input`.
 - `bin/render-html.php` takes page input values as a 4th argument, for the
   cross-engine parity harness.
 
+### Fixed
+
+- The chart's visually hidden data table was as wide as its container (the
+  chart table's `width: 100%` came after the screen-reader rule at the same
+  specificity), so a page with a chart scrolled sideways on a phone. It is 1px
+  wide again; byte-identical to fancy-cms-ui (shared `infographics.json` css).
+
 ### Changed
 
 - The built-in island catalogue's byte budget is 6000 (was 5000): `input` and
