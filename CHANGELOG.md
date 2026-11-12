@@ -15,6 +15,8 @@ upgrading.
 
 ## [Unreleased]
 
+## [0.9.0] - 2026-11-12
+
 **BREAKING only if your documents already use a node type named `chart`,
 `kpi`, `table` or `leaderboard`** for something of your own: those are now
 native node types in `PageDoc::NODE_TYPES`. Rename yours (a namespaced island
@@ -47,19 +49,6 @@ such as `kit:Chart`). Everyone else: nothing to do. The same holds for `input`.
   used to put it inside the host's `<div>`).
 - `bin/render-html.php` takes page input values as a 4th argument, for the
   cross-engine parity harness.
-
-### Fixed
-
-- The chart's visually hidden data table was as wide as its container (the
-  chart table's `width: 100%` came after the screen-reader rule at the same
-  specificity), so a page with a chart scrolled sideways on a phone. It is 1px
-  wide again; byte-identical to fancy-cms-ui (shared `infographics.json` css).
-
-### Changed
-
-- The built-in island catalogue's byte budget is 6000 (was 5000): `input` and
-  the `$params` / `$scope` binding keys cost 1273 bytes after trimming.
-
 - **Infographic node kit**, rendered by `PageRenderer`: `chart` (column, bar,
   line, pie, funnel; the server renders an accessible data table, and the
   browser loads the chart as a lazy island), `kpi` (value, label, delta, trend;
@@ -92,6 +81,18 @@ such as `kit:Chart`). Everyone else: nothing to do. The same holds for `input`.
   by `CssEmitter` only for documents that place an infographic node.
 - `bin/render-html.php` takes an optional data-context file as a third
   argument, for the parity harness.
+
+### Changed
+
+- The built-in island catalogue's byte budget is 6000 (was 5000): `input` and
+  the `$params` / `$scope` binding keys cost 1273 bytes after trimming.
+
+### Fixed
+
+- The chart's visually hidden data table was as wide as its container (the
+  chart table's `width: 100%` came after the screen-reader rule at the same
+  specificity), so a page with a chart scrolled sideways on a phone. It is 1px
+  wide again; byte-identical to fancy-cms-ui (shared `infographics.json` css).
 
 ## [0.8.1] - 2026-10-26
 
