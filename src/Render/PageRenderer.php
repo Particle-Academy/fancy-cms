@@ -7,6 +7,7 @@ namespace FancyCms\Render;
 use FancyCms\Document\Decorative;
 use FancyCms\Document\Icons;
 use FancyCms\Document\Ordering;
+use FancyCms\Islands\IslandCatalogue;
 
 /**
  * Renders a Stages document to the static skeleton: HTML (with `data-cms`
@@ -23,14 +24,15 @@ final class PageRenderer
      * @param  array<string,mixed>  $data  data context for bindings (Phase 3)
      * @return array{html:string,css:string}
      */
-    public static function render(array $doc, array $data = [], ?callable $imageResolver = null, ?callable $fontResolver = null, string $fontDisplay = 'swap'): array
+    public static function render(array $doc, array $data = [], ?callable $imageResolver = null, ?callable $fontResolver = null, string $fontDisplay = 'swap', ?IslandCatalogue $islands = null): array
     {
         $css = CssEmitter::emit($doc, $fontResolver, $fontDisplay);
+        $islands ??= IslandCatalogue::builtin();
         $html = '';
         $preloads = [];
         $decorativeSafe = Decorative::error(is_array($doc['nodes'] ?? null) ? $doc['nodes'] : []) === null;
         foreach (self::roots($doc) as $id) {
-            $html .= self::renderNode($doc, $id, $data, $preloads, $decorativeSafe, $imageResolver);
+            $html .= self::renderNode($doc, $id, $data, $preloads, $decorativeSafe, $imageResolver, $islands);
         }
         $hints = '';
         foreach ($preloads as $hint) {
@@ -84,14 +86,17 @@ final class PageRenderer
     /**
      * @param  array<string,mixed>  $doc
      */
-    private static function renderNode(array $doc, string $id, array $data, array &$preloads, bool $decorativeSafe, ?callable $imageResolver): string
+    private static function renderNode(array $doc, string $id, array $data, array &$preloads, bool $decorativeSafe, ?callable $imageResolver, IslandCatalogue $islands): string
     {
         $node = $doc['nodes'][$id] ?? null;
         if ($node === null) {
             return '';
         }
         $attr = ' data-cms="'.self::escape($node['id'] ?? $id).'"';
-        if (! empty($node['island'])) {
+        // An island when the node says so, or when its type is a registered
+        // island that hydrates (the chart, and every host island).
+        $isIsland = ! empty($node['island']) || (is_string($node['type'] ?? null) && $islands->hydrates($node['type']));
+        if ($isIsland) {
             $attr .= ' data-cms-island="'.self::escape((string) ($node['type'] ?? '')).'"';
         }
         if (is_string($node['className'] ?? null)) {
@@ -182,9 +187,15 @@ final class PageRenderer
         } elseif ($type === 'callout') {
             $content = $text($props['content'] ?? null);
             $inner = $escape($content === '' ? 'Callout' : $content);
-        } elseif (empty($node['island']) || in_array($type, ['section', 'stack', 'grid', 'frame', 'shape', 'card'], true)) {
+        } elseif (Infographics::isType($type)) {
+            $resolved = [];
+            foreach ($props as $key => $value) {
+                $resolved[$key] = self::resolve($value, $data);
+            }
+            $inner = Infographics::inner($type, $resolved);
+        } elseif (! $isIsland || in_array($type, ['section', 'stack', 'grid', 'frame', 'shape', 'card'], true)) {
             foreach (self::childrenOf($doc, $id) as $childId) {
-                $inner .= self::renderNode($doc, $childId, $data, $preloads, $decorativeSafe, $imageResolver);
+                $inner .= self::renderNode($doc, $childId, $data, $preloads, $decorativeSafe, $imageResolver, $islands);
             }
         }
 
@@ -245,6 +256,9 @@ final class PageRenderer
             }
 
             return [$href !== null ? 'a' : ($type === 'link' ? 'span' : 'div'), $attrs];
+        }
+        if (Infographics::isType($type)) {
+            return Infographics::element($type, $props, $text);
         }
         if ($type === 'callout') {
             $variant = $text($props['variant'] ?? null);

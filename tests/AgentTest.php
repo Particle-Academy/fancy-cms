@@ -40,6 +40,11 @@ final class AgentTest extends TestCase
         self::assertSame(['px', '%', 'vw', 'vh', 'rem', 'fr'], $catalogue['shapes']['Length']['unit']);
         self::assertSame(['row', 'column'], $catalogue['style']['direction']);
         self::assertSame(['base' => 0, 'md' => 768, 'lg' => 1024], $catalogue['breakpoints']);
+        $islands = $catalogue['islands'];
+        unset($catalogue['islands']);
         self::assertLessThanOrEqual(8000, strlen(json_encode($catalogue, JSON_THROW_ON_ERROR)), 'Catalogue byte cost is a release metric.');
+        // The built-in island schemas are budgeted separately: a host's own
+        // islands add to this, and only the host can bound those.
+        self::assertLessThanOrEqual(5000, strlen(json_encode($islands, JSON_THROW_ON_ERROR)), 'Built-in island catalogue byte cost is a release metric.');
     }
 }

@@ -286,6 +286,36 @@ free-form values that can escape a declaration. Theme token collisions use
 JavaScript's object-entry order; numeric formatting is independent of PHP's
 serialization precision. Legacy `sections[]` ordering remains readable.
 
+## Infographics and the island catalogue
+
+`chart`, `kpi`, `table` and `leaderboard` are native node types. The page
+carries the shape and binds its numbers with `$bind`; you pass the data:
+
+```php
+$out = PageRenderer::render($doc, ['metrics' => ['revenue' => 12345.6, 'change' => 0.12]]);
+```
+
+A chart renders as an accessible data table (the browser upgrades it to a
+lazily loaded canvas); missing or malformed data renders an empty state.
+`DataRequests::of($doc)` lists every bound path a page reads, with the shape
+each prop expects.
+
+The **island catalogue** describes every component type a host renders, each
+with a JSON Schema for its props. Build it once at boot and use it everywhere:
+
+```php
+use FancyCms\Islands\IslandCatalogue;
+
+$islands = IslandCatalogue::builtin()
+    ->register('kit:Tabs', ['description' => 'Tabbed panels', 'props' => $tabsSchema, 'example' => ['tabs' => []]])
+    // or the catalogue your JS host exported with islandCatalogue(islands):
+    ->merge(file_get_contents(resource_path('js/islands.json')));
+
+Agent::describe($islands);                            // cms_describe: types, schemas, examples
+new PageSession($doc, $islands->nodeTypes());         // documents may hold those types
+PageRenderer::render($doc, $data, islands: $islands); // registered types render as islands
+```
+
 ## Parity checks
 
 ```sh

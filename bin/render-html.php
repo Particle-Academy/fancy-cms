@@ -9,6 +9,9 @@ require __DIR__.'/../src/Render/FontAssets.php';
 require __DIR__.'/../src/Exceptions/FontResolutionException.php';
 require __DIR__.'/../src/Render/ImageAssets.php';
 require __DIR__.'/../src/Render/PageRenderer.php';
+require __DIR__.'/../src/Render/Infographics.php';
+require __DIR__.'/../src/Render/NumberFormat.php';
+require __DIR__.'/../src/Islands/IslandCatalogue.php';
 require __DIR__.'/../src/Document/Ordering.php';
 require __DIR__.'/../src/Document/Icons.php';
 require __DIR__.'/../src/Document/Decorative.php';
@@ -20,7 +23,7 @@ use FancyCms\Render\PageRenderer;
 
 $path = $argv[1] ?? null;
 if ($path === null || ! is_file($path)) {
-    fwrite(STDERR, "usage: php bin/render-html.php <doc.json> [host-assets.json]\n");
+    fwrite(STDERR, "usage: php bin/render-html.php <doc.json> [host-assets.json] [data.json]\n");
     exit(2);
 }
 try {
@@ -45,8 +48,23 @@ if (isset($argv[2])) {
         exit(2);
     }
 }
+// Optional data context, decoded with objects kept as objects so a JSON object
+// and a JSON array stay distinguishable, as they are to the React renderer.
+$data = [];
+if (isset($argv[3])) {
+    try {
+        $decoded = is_file($argv[3]) ? json_decode((string) file_get_contents($argv[3]), false, 512, JSON_THROW_ON_ERROR) : null;
+        if (! $decoded instanceof stdClass) {
+            throw new InvalidArgumentException('data must be an object');
+        }
+        $data = (array) $decoded;
+    } catch (JsonException|InvalidArgumentException) {
+        fwrite(STDERR, "invalid data context\n");
+        exit(2);
+    }
+}
 try {
-    echo PageRenderer::render($doc, [], static fn (string $handle): mixed => $manifest[$handle] ?? null)['html'];
+    echo PageRenderer::render($doc, $data, static fn (string $handle): mixed => $manifest[$handle] ?? null)['html'];
 } catch (FontResolutionException $e) {
     // A structured font needs a host resolver, which this CLI has none of.
     fwrite(STDERR, $e->reason."\n");

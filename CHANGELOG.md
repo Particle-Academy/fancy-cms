@@ -15,6 +15,46 @@ upgrading.
 
 ## [Unreleased]
 
+**BREAKING only if your documents already use a node type named `chart`,
+`kpi`, `table` or `leaderboard`** for something of your own: those are now
+native node types in `PageDoc::NODE_TYPES`. Rename yours (a namespaced island
+such as `kit:Chart`). Everyone else: nothing to do.
+
+### Added
+
+- **Infographic node kit**, rendered by `PageRenderer`: `chart` (column, bar,
+  line, pie, funnel; the server renders an accessible data table, and the
+  browser loads the chart as a lazy island), `kpi` (value, label, delta, trend;
+  number / currency / percent), `table` (typed columns, sort, totals row) and
+  `leaderboard` (ranked rows, ties share a rank). Each binds its numbers with
+  `$bind` from the `$data` you already pass to `render()`. Missing or malformed
+  data renders an empty state, never an exception. Markup is byte-identical to
+  `@particle-academy/fancy-cms-ui`'s `CmsPage`; both suites render the shared
+  spec in `tests/fixtures/infographics.json`.
+- **`FancyCms\Islands\IslandCatalogue`**: the island catalogue, each type with a
+  JSON Schema for its props, an example and how it hydrates. `builtin()` holds
+  the infographic kit (`resources/islands/catalogue.json`, shipped
+  byte-identical in fancy-cms-ui). `register($type, [...])` adds a host island
+  (`kit:Tabs`); `merge($json)` takes the catalogue a JS host exports with
+  `islandCatalogue(islands)`; `nodeTypes()` is the `$knownTypes` list for
+  `PageDoc` / `PageSession`. Immutable, so one catalogue built at boot is safe
+  to share.
+- **`Agent::describe(?IslandCatalogue $islands)`** returns the catalogue under
+  `islands` and lists every island type in `elements`, so `cms_describe` tells
+  an agent which types the host renders and what props each takes. The base
+  catalogue keeps its 8,000-byte budget; the built-in island schemas have a
+  separate 5,000-byte budget (4,640 today).
+- **`PageRenderer::render(..., islands: $catalogue)`** marks registered host
+  island types with `data-cms-island` without the node setting `island`.
+- **`FancyCms\Data\DataRequests::of($doc)`**: every bound path a page reads,
+  with the literal schema the catalogue declares for it. The seam where a host
+  learns what data to supply; page inputs and a host data catalogue attach here
+  later.
+- An infographic stylesheet block (light, dark, print, theme tokens), emitted
+  by `CssEmitter` only for documents that place an infographic node.
+- `bin/render-html.php` takes an optional data-context file as a third
+  argument, for the parity harness.
+
 ## [0.8.1] - 2026-10-26
 
 **Nothing to do:** a documentation addition and a CLI fix. The renderer API is unchanged.

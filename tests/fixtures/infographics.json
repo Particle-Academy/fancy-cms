@@ -1,0 +1,1151 @@
+{
+  "about": "Shared PHP/React parity spec for the infographic nodes. Byte-identical in fancy-cms and fancy-cms-ui; each repo's suite renders every case and must produce html exactly.",
+  "css": "/* fancy-cms infographics */\n\n:where([data-cms-kpi], [data-cms-table], [data-cms-leaderboard], figure[data-cms-chart]) {\n  --cms-ig-down: var(--cms-color-negative, #b91c1c);\n  --cms-ig-muted: color-mix(in srgb, currentColor 70%, transparent);\n  --cms-ig-rule: color-mix(in srgb, currentColor 20%, transparent);\n  --cms-ig-up: var(--cms-color-positive, #15803d);\n}\n\n:where(figure[data-cms-chart]) {\n  --cms-chart-1: var(--cms-color-primary, #7c3aed);\n  --cms-chart-2: var(--cms-chart-teal, #0f766e);\n  --cms-chart-3: var(--cms-chart-orange, #c2410c);\n  --cms-chart-4: var(--cms-chart-blue, #1d4ed8);\n  --cms-chart-5: var(--cms-chart-pink, #be185d);\n  --cms-chart-6: var(--cms-chart-lime, #4d7c0f);\n  margin: 0;\n}\n\n:where(.dark, [data-theme=\"dark\"]) :where([data-cms-kpi], [data-cms-table], [data-cms-leaderboard], figure[data-cms-chart]) {\n  --cms-ig-down: var(--cms-color-negative-dark, #f87171);\n  --cms-ig-up: var(--cms-color-positive-dark, #4ade80);\n}\n\n:where(.dark, [data-theme=\"dark\"]) :where(figure[data-cms-chart]) {\n  --cms-chart-1: var(--cms-color-primary-dark, #a78bfa);\n  --cms-chart-2: var(--cms-chart-teal-dark, #2dd4bf);\n  --cms-chart-3: var(--cms-chart-orange-dark, #fb923c);\n  --cms-chart-4: var(--cms-chart-blue-dark, #60a5fa);\n  --cms-chart-5: var(--cms-chart-pink-dark, #f472b6);\n  --cms-chart-6: var(--cms-chart-lime-dark, #a3e635);\n}\n\n:where([data-cms-sr]) {\n  border: 0;\n  clip-path: inset(50%);\n  height: 1px;\n  margin: -1px;\n  overflow: hidden;\n  padding: 0;\n  position: absolute;\n  white-space: nowrap;\n  width: 1px;\n}\n\n:where([data-cms-empty]) {\n  border: 1px dashed var(--cms-ig-rule);\n  border-radius: 8px;\n  color: var(--cms-ig-muted);\n  font-size: 0.875em;\n  margin: 0;\n  padding: 16px;\n  text-align: center;\n}\n\n:where([data-cms-kpi]) {\n  display: flex;\n  flex-direction: column;\n  gap: 4px;\n}\n\n:where([data-cms-kpi] > p) {\n  margin: 0;\n}\n\n:where([data-cms-kpi-label]) {\n  color: var(--cms-ig-muted);\n  font-size: 0.875em;\n}\n\n:where([data-cms-kpi-value]) {\n  font-size: 2em;\n  font-variant-numeric: tabular-nums;\n  font-weight: 700;\n  line-height: 1.1;\n  overflow-wrap: anywhere;\n}\n\n:where([data-cms-kpi-delta]) {\n  align-items: center;\n  display: inline-flex;\n  font-size: 0.875em;\n  font-weight: 600;\n  gap: 6px;\n}\n\n:where([data-cms-kpi-delta])::before {\n  border-left: 5px solid transparent;\n  border-right: 5px solid transparent;\n  content: \"\";\n}\n\n:where([data-cms-kpi-trend=\"up\"])::before {\n  border-bottom: 7px solid currentColor;\n}\n\n:where([data-cms-kpi-trend=\"down\"])::before {\n  border-top: 7px solid currentColor;\n}\n\n:where([data-cms-kpi-trend=\"flat\"])::before {\n  border: 0;\n  border-top: 2px solid currentColor;\n  width: 8px;\n}\n\n:where([data-cms-kpi-tone=\"positive\"]) {\n  color: var(--cms-ig-up);\n}\n\n:where([data-cms-kpi-tone=\"negative\"]) {\n  color: var(--cms-ig-down);\n}\n\n:where([data-cms-table]) {\n  max-width: 100%;\n  overflow-x: auto;\n}\n\n:where([data-cms-table]:focus-visible) {\n  outline: 2px solid var(--cms-color-primary, #7c3aed);\n  outline-offset: 2px;\n}\n\n:where([data-cms-table] table, figure[data-cms-chart] table) {\n  border-collapse: collapse;\n  font-variant-numeric: tabular-nums;\n  width: 100%;\n}\n\n:where([data-cms-table] caption) {\n  caption-side: top;\n  color: var(--cms-ig-muted);\n  font-size: 0.875em;\n  padding-bottom: 8px;\n  text-align: left;\n}\n\n:where([data-cms-table] th, [data-cms-table] td, figure[data-cms-chart] th, figure[data-cms-chart] td) {\n  border-bottom: 1px solid var(--cms-ig-rule);\n  padding: 8px 12px;\n  text-align: left;\n}\n\n:where([data-cms-table] thead th, figure[data-cms-chart] thead th) {\n  font-weight: 600;\n}\n\n:where([data-cms-table] tfoot td) {\n  border-bottom: 0;\n  border-top: 2px solid var(--cms-ig-rule);\n  font-weight: 600;\n}\n\n:where(figure[data-cms-chart] td, [data-cms-align=\"end\"]) {\n  text-align: right;\n}\n\n:where([data-cms-align=\"center\"]) {\n  text-align: center;\n}\n\n:where([data-cms-leaderboard] ol) {\n  list-style: none;\n  margin: 0;\n  padding: 0;\n}\n\n:where([data-cms-leaderboard] li) {\n  align-items: baseline;\n  border-bottom: 1px solid var(--cms-ig-rule);\n  display: flex;\n  gap: 12px;\n  padding: 8px 0;\n}\n\n:where([data-cms-lb=\"rank\"]) {\n  color: var(--cms-ig-muted);\n  font-variant-numeric: tabular-nums;\n  min-width: 2ch;\n  text-align: right;\n}\n\n:where([data-cms-rank=\"1\"] [data-cms-lb=\"rank\"]) {\n  font-weight: 700;\n}\n\n:where([data-cms-lb=\"label\"]) {\n  flex: 1;\n  min-width: 0;\n  overflow-wrap: anywhere;\n}\n\n:where([data-cms-lb=\"value\"]) {\n  font-variant-numeric: tabular-nums;\n  font-weight: 600;\n}\n\n:where(figure[data-cms-chart] figcaption) {\n  font-weight: 600;\n  margin-bottom: 8px;\n}\n\n:where([data-cms-chart-canvas]) {\n  height: 320px;\n  width: 100%;\n}\n\n:where([data-cms-chart-size=\"sm\"] [data-cms-chart-canvas]) {\n  height: 220px;\n}\n\n:where([data-cms-chart-size=\"lg\"] [data-cms-chart-canvas]) {\n  height: 420px;\n}\n\n@media print {\n  :where([data-cms-chart-canvas]) {\n    display: none;\n  }\n\n  :where([data-cms-chart-data][data-cms-sr]) {\n    clip-path: none;\n    height: auto;\n    margin: 0;\n    overflow: visible;\n    position: static;\n    white-space: normal;\n    width: 100%;\n  }\n\n  :where([data-cms-table]) {\n    overflow: visible;\n  }\n\n  :where([data-cms-kpi], [data-cms-table], [data-cms-leaderboard], figure[data-cms-chart]) {\n    break-inside: avoid;\n  }\n}",
+  "cases": [
+    {
+      "name": "kpi: bound currency value, positive percent delta",
+      "nodes": [
+        {
+          "id": "k",
+          "type": "kpi",
+          "parent": null,
+          "order": "a",
+          "props": {
+            "label": "Revenue",
+            "value": {
+              "$bind": "m.revenue"
+            },
+            "delta": {
+              "$bind": "m.change"
+            },
+            "format": "currency"
+          },
+          "style": {
+            "base": {}
+          }
+        }
+      ],
+      "data": {
+        "m": {
+          "revenue": 12345.678,
+          "change": 0.125
+        }
+      },
+      "html": "<div data-cms=\"k\" data-cms-kpi=\"\"><p data-cms-kpi-label=\"\">Revenue</p><p data-cms-kpi-value=\"\">$12,345.68</p><p data-cms-kpi-delta=\"\" data-cms-kpi-trend=\"up\" data-cms-kpi-tone=\"positive\"><span data-cms-sr=\"\">Up</span> +12.5%</p></div>"
+    },
+    {
+      "name": "kpi: percent value, number delta, down is good",
+      "nodes": [
+        {
+          "id": "k",
+          "type": "kpi",
+          "parent": null,
+          "order": "a",
+          "props": {
+            "label": {
+              "$bind": "m.label"
+            },
+            "value": {
+              "$bind": "m.churn"
+            },
+            "delta": {
+              "$bind": "m.churnDelta"
+            },
+            "format": "percent",
+            "decimals": 2,
+            "deltaFormat": "number",
+            "goodDirection": "down"
+          },
+          "style": {
+            "base": {}
+          }
+        }
+      ],
+      "data": {
+        "m": {
+          "label": "Churn",
+          "churn": 0.0345,
+          "churnDelta": -0.4
+        }
+      },
+      "html": "<div data-cms=\"k\" data-cms-kpi=\"\"><p data-cms-kpi-label=\"\">Churn</p><p data-cms-kpi-value=\"\">3.45%</p><p data-cms-kpi-delta=\"\" data-cms-kpi-trend=\"down\" data-cms-kpi-tone=\"positive\"><span data-cms-sr=\"\">Down</span> -0.4</p></div>"
+    },
+    {
+      "name": "kpi: grouped integer, zero delta, explicit flat trend",
+      "nodes": [
+        {
+          "id": "k",
+          "type": "kpi",
+          "parent": null,
+          "order": "a",
+          "props": {
+            "label": "Visitors",
+            "value": {
+              "$bind": "v"
+            },
+            "delta": {
+              "$bind": "d"
+            },
+            "trend": "flat"
+          },
+          "style": {
+            "base": {}
+          }
+        }
+      ],
+      "data": {
+        "v": 1234567,
+        "d": 0
+      },
+      "html": "<div data-cms=\"k\" data-cms-kpi=\"\"><p data-cms-kpi-label=\"\">Visitors</p><p data-cms-kpi-value=\"\">1,234,567</p><p data-cms-kpi-delta=\"\" data-cms-kpi-trend=\"flat\" data-cms-kpi-tone=\"neutral\"><span data-cms-sr=\"\">No change</span> 0%</p></div>"
+    },
+    {
+      "name": "kpi: exponent value, bound trend overrides the delta sign, fixed delta decimals",
+      "nodes": [
+        {
+          "id": "k",
+          "type": "kpi",
+          "parent": null,
+          "order": "a",
+          "props": {
+            "label": "Signups",
+            "value": {
+              "$bind": "v"
+            },
+            "delta": {
+              "$bind": "d"
+            },
+            "trend": {
+              "$bind": "t"
+            },
+            "deltaDecimals": 1
+          },
+          "style": {
+            "base": {}
+          }
+        }
+      ],
+      "data": {
+        "v": 1e+21,
+        "d": -0.02,
+        "t": "up"
+      },
+      "html": "<div data-cms=\"k\" data-cms-kpi=\"\"><p data-cms-kpi-label=\"\">Signups</p><p data-cms-kpi-value=\"\">1,000,000,000,000,000,000,000</p><p data-cms-kpi-delta=\"\" data-cms-kpi-trend=\"up\" data-cms-kpi-tone=\"positive\"><span data-cms-sr=\"\">Up</span> -2.0%</p></div>"
+    },
+    {
+      "name": "kpi: missing bound value renders the empty state",
+      "nodes": [
+        {
+          "id": "k",
+          "type": "kpi",
+          "parent": null,
+          "order": "a",
+          "props": {
+            "label": "Revenue",
+            "value": {
+              "$bind": "nope.x"
+            },
+            "delta": {
+              "$bind": "d"
+            }
+          },
+          "style": {
+            "base": {}
+          }
+        }
+      ],
+      "data": {
+        "d": 0.1
+      },
+      "html": "<div data-cms=\"k\" data-cms-kpi=\"\"><p data-cms-kpi-label=\"\">Revenue</p><p data-cms-empty=\"\">No data available</p></div>"
+    },
+    {
+      "name": "kpi: malformed bound value with custom empty text and no label",
+      "nodes": [
+        {
+          "id": "k",
+          "type": "kpi",
+          "parent": null,
+          "order": "a",
+          "props": {
+            "value": {
+              "$bind": "v"
+            },
+            "emptyText": "Waiting for numbers"
+          },
+          "style": {
+            "base": {}
+          }
+        }
+      ],
+      "data": {
+        "v": {
+          "amount": 3
+        }
+      },
+      "html": "<div data-cms=\"k\" data-cms-kpi=\"\"><p data-cms-empty=\"\">Waiting for numbers</p></div>"
+    },
+    {
+      "name": "kpi: numeric string, zero-decimal currency, malformed delta dropped",
+      "nodes": [
+        {
+          "id": "k",
+          "type": "kpi",
+          "parent": null,
+          "order": "a",
+          "props": {
+            "value": {
+              "$bind": "v"
+            },
+            "delta": {
+              "$bind": "d"
+            },
+            "format": "currency",
+            "currency": "JPY"
+          },
+          "style": {
+            "base": {}
+          }
+        }
+      ],
+      "data": {
+        "v": "-98765.5",
+        "d": "abc"
+      },
+      "html": "<div data-cms=\"k\" data-cms-kpi=\"\"><p data-cms-kpi-value=\"\">-¥98,766</p></div>"
+    },
+    {
+      "name": "kpi: a value that rounds to zero carries no sign",
+      "nodes": [
+        {
+          "id": "k",
+          "type": "kpi",
+          "parent": null,
+          "order": "a",
+          "props": {
+            "label": "Error rate",
+            "value": {
+              "$bind": "v"
+            },
+            "format": "percent"
+          },
+          "style": {
+            "base": {}
+          }
+        }
+      ],
+      "data": {
+        "v": -1e-7
+      },
+      "html": "<div data-cms=\"k\" data-cms-kpi=\"\"><p data-cms-kpi-label=\"\">Error rate</p><p data-cms-kpi-value=\"\">0%</p></div>"
+    },
+    {
+      "name": "table: sorted descending with sum and average totals",
+      "nodes": [
+        {
+          "id": "t",
+          "type": "table",
+          "parent": null,
+          "order": "a",
+          "props": {
+            "caption": "Q3 by region",
+            "columns": [
+              {
+                "key": "region",
+                "label": "Region"
+              },
+              {
+                "key": "sales",
+                "label": "Sales",
+                "format": "currency",
+                "total": "sum"
+              },
+              {
+                "key": "growth",
+                "label": "Growth",
+                "format": "percent",
+                "total": "avg"
+              }
+            ],
+            "rows": {
+              "$bind": "t.rows"
+            },
+            "sort": {
+              "key": "sales",
+              "dir": "desc"
+            },
+            "totals": true
+          },
+          "style": {
+            "base": {}
+          }
+        }
+      ],
+      "data": {
+        "t": {
+          "rows": [
+            {
+              "region": "West",
+              "sales": 1200.5,
+              "growth": 0.1
+            },
+            {
+              "region": "East",
+              "sales": 999.995,
+              "growth": 0.25
+            },
+            {
+              "region": "North",
+              "sales": "300",
+              "growth": null
+            },
+            {
+              "region": "South"
+            }
+          ]
+        }
+      },
+      "html": "<div data-cms=\"t\" data-cms-table=\"\" role=\"region\" tabindex=\"0\" aria-label=\"Q3 by region\"><table><caption>Q3 by region</caption><thead><tr><th scope=\"col\">Region</th><th scope=\"col\" aria-sort=\"descending\" data-cms-align=\"end\">Sales</th><th scope=\"col\" data-cms-align=\"end\">Growth</th></tr></thead><tbody><tr><td>West</td><td data-cms-align=\"end\">$1,200.50</td><td data-cms-align=\"end\">10%</td></tr><tr><td>East</td><td data-cms-align=\"end\">$1,000.00</td><td data-cms-align=\"end\">25%</td></tr><tr><td>North</td><td data-cms-align=\"end\">$300.00</td><td data-cms-align=\"end\"></td></tr><tr><td>South</td><td data-cms-align=\"end\"></td><td data-cms-align=\"end\"></td></tr></tbody><tfoot><tr><td>Total</td><td data-cms-align=\"end\">$2,500.50</td><td data-cms-align=\"end\">17.5%</td></tr></tfoot></table></div>"
+    },
+    {
+      "name": "table: bound columns, hostile text, UTF-16 string sort, junk rows and columns skipped",
+      "nodes": [
+        {
+          "id": "t",
+          "type": "table",
+          "parent": null,
+          "order": "a",
+          "props": {
+            "caption": "A \"quoted\" <caption>",
+            "columns": {
+              "$bind": "cols"
+            },
+            "rows": {
+              "$bind": "rows"
+            },
+            "sort": {
+              "key": "name"
+            },
+            "totals": true,
+            "totalsLabel": "Sum"
+          },
+          "style": {
+            "base": {}
+          }
+        }
+      ],
+      "data": {
+        "cols": [
+          {
+            "key": "name"
+          },
+          {
+            "key": "note",
+            "label": "Note",
+            "align": "center"
+          },
+          {
+            "key": "n",
+            "label": "N"
+          },
+          {
+            "key": "fee",
+            "label": "Fee",
+            "format": "currency",
+            "currency": "CHF",
+            "total": "max"
+          },
+          "junk",
+          {
+            "label": "no key"
+          }
+        ],
+        "rows": [
+          {
+            "name": "b",
+            "note": "<b>x</b>",
+            "n": 1234.5,
+            "fee": 10
+          },
+          {
+            "name": "B",
+            "note": true,
+            "n": {
+              "x": 1
+            },
+            "fee": "12.5"
+          },
+          {
+            "name": "ä",
+            "note": null,
+            "n": "7",
+            "fee": "n/a"
+          },
+          {
+            "name": "a",
+            "note": "it's",
+            "n": false
+          },
+          "not a row",
+          [
+            1,
+            2
+          ]
+        ]
+      },
+      "html": "<div data-cms=\"t\" data-cms-table=\"\" role=\"region\" tabindex=\"0\" aria-label=\"A &quot;quoted&quot; &lt;caption&gt;\"><table><caption>A &quot;quoted&quot; &lt;caption&gt;</caption><thead><tr><th scope=\"col\" aria-sort=\"ascending\">name</th><th scope=\"col\" data-cms-align=\"center\">Note</th><th scope=\"col\">N</th><th scope=\"col\" data-cms-align=\"end\">Fee</th></tr></thead><tbody><tr><td>B</td><td data-cms-align=\"center\">true</td><td></td><td data-cms-align=\"end\">CHF 12.50</td></tr><tr><td>a</td><td data-cms-align=\"center\">it&#x27;s</td><td>false</td><td data-cms-align=\"end\"></td></tr><tr><td>b</td><td data-cms-align=\"center\">&lt;b&gt;x&lt;/b&gt;</td><td>1234.5</td><td data-cms-align=\"end\">CHF 10.00</td></tr><tr><td>ä</td><td data-cms-align=\"center\"></td><td>7</td><td data-cms-align=\"end\">n/a</td></tr></tbody><tfoot><tr><td>Sum</td><td data-cms-align=\"center\"></td><td></td><td data-cms-align=\"end\">CHF 12.50</td></tr></tfoot></table></div>"
+    },
+    {
+      "name": "table: mixed sort keeps numbers first and missing values last",
+      "nodes": [
+        {
+          "id": "t",
+          "type": "table",
+          "parent": null,
+          "order": "a",
+          "props": {
+            "columns": [
+              {
+                "key": "v",
+                "label": "V"
+              }
+            ],
+            "rows": {
+              "$bind": "rows"
+            },
+            "sort": {
+              "key": "v",
+              "dir": "desc"
+            }
+          },
+          "style": {
+            "base": {}
+          }
+        }
+      ],
+      "data": {
+        "rows": [
+          {
+            "v": "apple"
+          },
+          {
+            "v": 3
+          },
+          {},
+          {
+            "v": "10"
+          },
+          {
+            "v": "Zed"
+          },
+          {
+            "v": null
+          }
+        ]
+      },
+      "html": "<div data-cms=\"t\" data-cms-table=\"\" role=\"region\" tabindex=\"0\" aria-label=\"Table\"><table><thead><tr><th scope=\"col\" aria-sort=\"descending\">V</th></tr></thead><tbody><tr><td>10</td></tr><tr><td>3</td></tr><tr><td>apple</td></tr><tr><td>Zed</td></tr><tr><td></td></tr><tr><td></td></tr></tbody></table></div>"
+    },
+    {
+      "name": "table: count, min and average totals with fixed decimals",
+      "nodes": [
+        {
+          "id": "t",
+          "type": "table",
+          "parent": null,
+          "order": "a",
+          "props": {
+            "columns": [
+              {
+                "key": "n",
+                "label": "N",
+                "total": "count"
+              },
+              {
+                "key": "x",
+                "label": "X",
+                "format": "number",
+                "decimals": 2,
+                "total": "min"
+              },
+              {
+                "key": "y",
+                "label": "Y",
+                "format": "number",
+                "total": "avg"
+              }
+            ],
+            "rows": {
+              "$bind": "rows"
+            },
+            "totals": true,
+            "sort": {
+              "key": "missing"
+            }
+          },
+          "style": {
+            "base": {}
+          }
+        }
+      ],
+      "data": {
+        "rows": [
+          {
+            "n": "a",
+            "x": 3.14159,
+            "y": "x"
+          },
+          {
+            "n": "b",
+            "x": -2.5,
+            "y": "y"
+          }
+        ]
+      },
+      "html": "<div data-cms=\"t\" data-cms-table=\"\" role=\"region\" tabindex=\"0\" aria-label=\"Table\"><table><thead><tr><th scope=\"col\">N</th><th scope=\"col\" data-cms-align=\"end\">X</th><th scope=\"col\" data-cms-align=\"end\">Y</th></tr></thead><tbody><tr><td>a</td><td data-cms-align=\"end\">3.14</td><td data-cms-align=\"end\">x</td></tr><tr><td>b</td><td data-cms-align=\"end\">-2.50</td><td data-cms-align=\"end\">y</td></tr></tbody><tfoot><tr><td>2</td><td data-cms-align=\"end\">-2.50</td><td data-cms-align=\"end\"></td></tr></tfoot></table></div>"
+    },
+    {
+      "name": "table: missing rows render the empty state",
+      "nodes": [
+        {
+          "id": "t",
+          "type": "table",
+          "parent": null,
+          "order": "a",
+          "props": {
+            "columns": [
+              {
+                "key": "a"
+              }
+            ],
+            "rows": {
+              "$bind": "missing"
+            }
+          },
+          "style": {
+            "base": {}
+          }
+        }
+      ],
+      "data": {},
+      "html": "<div data-cms=\"t\" data-cms-table=\"\" role=\"region\" tabindex=\"0\" aria-label=\"Table\"><p data-cms-empty=\"\">No data available</p></div>"
+    },
+    {
+      "name": "table: malformed columns render bound empty text",
+      "nodes": [
+        {
+          "id": "t",
+          "type": "table",
+          "parent": null,
+          "order": "a",
+          "props": {
+            "caption": "Broken",
+            "columns": "oops",
+            "rows": {
+              "$bind": "rows"
+            },
+            "emptyText": {
+              "$bind": "msg"
+            }
+          },
+          "style": {
+            "base": {}
+          }
+        }
+      ],
+      "data": {
+        "rows": [
+          {
+            "a": 1
+          }
+        ],
+        "msg": "Sales data is loading"
+      },
+      "html": "<div data-cms=\"t\" data-cms-table=\"\" role=\"region\" tabindex=\"0\" aria-label=\"Broken\"><p data-cms-empty=\"\">Sales data is loading</p></div>"
+    },
+    {
+      "name": "table: an empty row list is empty",
+      "nodes": [
+        {
+          "id": "t",
+          "type": "table",
+          "parent": null,
+          "order": "a",
+          "props": {
+            "columns": [
+              {
+                "key": "a"
+              }
+            ],
+            "rows": []
+          },
+          "style": {
+            "base": {}
+          }
+        }
+      ],
+      "data": {},
+      "html": "<div data-cms=\"t\" data-cms-table=\"\" role=\"region\" tabindex=\"0\" aria-label=\"Table\"><p data-cms-empty=\"\">No data available</p></div>"
+    },
+    {
+      "name": "leaderboard: competition ranking with ties, non-numeric rows dropped, limit",
+      "nodes": [
+        {
+          "id": "l",
+          "type": "leaderboard",
+          "parent": null,
+          "order": "a",
+          "props": {
+            "rows": {
+              "$bind": "contest"
+            },
+            "valueKey": "score",
+            "limit": 3
+          },
+          "style": {
+            "base": {}
+          }
+        }
+      ],
+      "data": {
+        "contest": [
+          {
+            "name": "Ada",
+            "score": 1200
+          },
+          {
+            "name": "Linus",
+            "score": 950
+          },
+          {
+            "name": "Grace",
+            "score": 1200
+          },
+          {
+            "name": "Bad",
+            "score": "n/a"
+          },
+          {
+            "name": "Ken",
+            "score": 800
+          }
+        ]
+      },
+      "html": "<div data-cms=\"l\" data-cms-leaderboard=\"\"><ol><li data-cms-rank=\"1\"><span data-cms-lb=\"rank\">1</span><span data-cms-lb=\"label\">Ada</span><span data-cms-lb=\"value\">1,200</span></li><li data-cms-rank=\"1\"><span data-cms-lb=\"rank\">1</span><span data-cms-lb=\"label\">Grace</span><span data-cms-lb=\"value\">1,200</span></li><li data-cms-rank=\"3\"><span data-cms-lb=\"rank\">3</span><span data-cms-lb=\"label\">Linus</span><span data-cms-lb=\"value\">950</span></li></ol></div>"
+    },
+    {
+      "name": "leaderboard: ascending, currency, custom keys, out-of-range limit uses the default",
+      "nodes": [
+        {
+          "id": "l",
+          "type": "leaderboard",
+          "parent": null,
+          "order": "a",
+          "props": {
+            "rows": {
+              "$bind": "laps"
+            },
+            "labelKey": "team",
+            "valueKey": "time",
+            "order": "asc",
+            "format": "currency",
+            "currency": "EUR",
+            "limit": 500
+          },
+          "style": {
+            "base": {}
+          }
+        }
+      ],
+      "data": {
+        "laps": [
+          {
+            "team": "<Red>",
+            "time": "61.5"
+          },
+          {
+            "team": "Blue",
+            "time": 59.25
+          },
+          {
+            "time": 70
+          }
+        ]
+      },
+      "html": "<div data-cms=\"l\" data-cms-leaderboard=\"\"><ol><li data-cms-rank=\"1\"><span data-cms-lb=\"rank\">1</span><span data-cms-lb=\"label\">Blue</span><span data-cms-lb=\"value\">€59.25</span></li><li data-cms-rank=\"2\"><span data-cms-lb=\"rank\">2</span><span data-cms-lb=\"label\">&lt;Red&gt;</span><span data-cms-lb=\"value\">€61.50</span></li><li data-cms-rank=\"3\"><span data-cms-lb=\"rank\">3</span><span data-cms-lb=\"label\"></span><span data-cms-lb=\"value\">€70.00</span></li></ol></div>"
+    },
+    {
+      "name": "leaderboard: missing rows render the empty state",
+      "nodes": [
+        {
+          "id": "l",
+          "type": "leaderboard",
+          "parent": null,
+          "order": "a",
+          "props": {
+            "rows": {
+              "$bind": "missing"
+            }
+          },
+          "style": {
+            "base": {}
+          }
+        }
+      ],
+      "data": {},
+      "html": "<div data-cms=\"l\" data-cms-leaderboard=\"\"><p data-cms-empty=\"\">No data available</p></div>"
+    },
+    {
+      "name": "leaderboard: rows with no numeric value are empty",
+      "nodes": [
+        {
+          "id": "l",
+          "type": "leaderboard",
+          "parent": null,
+          "order": "a",
+          "props": {
+            "rows": {
+              "$bind": "rows"
+            }
+          },
+          "style": {
+            "base": {}
+          }
+        }
+      ],
+      "data": {
+        "rows": [
+          {
+            "name": "x",
+            "value": "?"
+          }
+        ]
+      },
+      "html": "<div data-cms=\"l\" data-cms-leaderboard=\"\"><p data-cms-empty=\"\">No data available</p></div>"
+    },
+    {
+      "name": "chart: bound column chart, static data table fallback",
+      "nodes": [
+        {
+          "id": "c",
+          "type": "chart",
+          "parent": null,
+          "order": "a",
+          "props": {
+            "kind": "column",
+            "title": "Monthly signups",
+            "categories": {
+              "$bind": "c.months"
+            },
+            "series": {
+              "$bind": "c.series"
+            }
+          },
+          "style": {
+            "base": {}
+          }
+        }
+      ],
+      "data": {
+        "c": {
+          "months": [
+            "Jan",
+            "Feb",
+            "Mar"
+          ],
+          "series": [
+            {
+              "name": "Free",
+              "data": [
+                120,
+                150.5,
+                null
+              ]
+            },
+            {
+              "name": "Pro",
+              "data": [
+                30,
+                45
+              ]
+            }
+          ]
+        }
+      },
+      "html": "<figure data-cms=\"c\" data-cms-island=\"chart\" data-cms-chart=\"column\" data-cms-chart-size=\"md\"><figcaption>Monthly signups</figcaption><table data-cms-chart-data=\"\"><thead><tr><th scope=\"col\">Category</th><th scope=\"col\">Free</th><th scope=\"col\">Pro</th></tr></thead><tbody><tr><th scope=\"row\">Jan</th><td>120</td><td>30</td></tr><tr><th scope=\"row\">Feb</th><td>150.5</td><td>45</td></tr><tr><th scope=\"row\">Mar</th><td></td><td></td></tr></tbody></table></figure>"
+    },
+    {
+      "name": "chart: pie uses the first series, percent format, numeric categories",
+      "nodes": [
+        {
+          "id": "c",
+          "type": "chart",
+          "parent": null,
+          "order": "a",
+          "props": {
+            "kind": "pie",
+            "size": "lg",
+            "categoryLabel": "Plan",
+            "categories": {
+              "$bind": "cats"
+            },
+            "series": {
+              "$bind": "series"
+            },
+            "format": "percent"
+          },
+          "style": {
+            "base": {}
+          }
+        }
+      ],
+      "data": {
+        "cats": [
+          2024,
+          2025,
+          "Other"
+        ],
+        "series": [
+          {
+            "name": "Share",
+            "data": [
+              0.5,
+              0.3,
+              0.2
+            ]
+          },
+          {
+            "name": "Ignored",
+            "data": [
+              1,
+              2,
+              3
+            ]
+          }
+        ]
+      },
+      "html": "<figure data-cms=\"c\" data-cms-island=\"chart\" data-cms-chart=\"pie\" data-cms-chart-size=\"lg\"><table data-cms-chart-data=\"\"><thead><tr><th scope=\"col\">Plan</th><th scope=\"col\">Share</th></tr></thead><tbody><tr><th scope=\"row\">2024</th><td>50%</td></tr><tr><th scope=\"row\">2025</th><td>30%</td></tr><tr><th scope=\"row\">Other</th><td>20%</td></tr></tbody></table></figure>"
+    },
+    {
+      "name": "chart: funnel from a plain number series, bound title, zero-decimal currency",
+      "nodes": [
+        {
+          "id": "c",
+          "type": "chart",
+          "parent": null,
+          "order": "a",
+          "props": {
+            "kind": "funnel",
+            "title": {
+              "$bind": "f.title"
+            },
+            "categories": [
+              "Leads",
+              "Calls",
+              "Deals"
+            ],
+            "series": {
+              "$bind": "f.values"
+            },
+            "format": "currency",
+            "decimals": 0
+          },
+          "style": {
+            "base": {}
+          }
+        }
+      ],
+      "data": {
+        "f": {
+          "title": "Pipeline",
+          "values": [
+            1000,
+            "600",
+            20.5
+          ]
+        }
+      },
+      "html": "<figure data-cms=\"c\" data-cms-island=\"chart\" data-cms-chart=\"funnel\" data-cms-chart-size=\"md\"><figcaption>Pipeline</figcaption><table data-cms-chart-data=\"\"><thead><tr><th scope=\"col\">Category</th><th scope=\"col\">Value</th></tr></thead><tbody><tr><th scope=\"row\">Leads</th><td>$1,000</td></tr><tr><th scope=\"row\">Calls</th><td>$600</td></tr><tr><th scope=\"row\">Deals</th><td>$21</td></tr></tbody></table></figure>"
+    },
+    {
+      "name": "chart: unnamed series get positional names, short data leaves empty cells",
+      "nodes": [
+        {
+          "id": "c",
+          "type": "chart",
+          "parent": null,
+          "order": "a",
+          "props": {
+            "kind": "bar",
+            "categories": [
+              "a",
+              "b"
+            ],
+            "series": {
+              "$bind": "s"
+            }
+          },
+          "style": {
+            "base": {}
+          }
+        }
+      ],
+      "data": {
+        "s": [
+          {
+            "data": [
+              1
+            ]
+          },
+          {
+            "name": "",
+            "data": [
+              2,
+              3
+            ]
+          }
+        ]
+      },
+      "html": "<figure data-cms=\"c\" data-cms-island=\"chart\" data-cms-chart=\"bar\" data-cms-chart-size=\"md\"><table data-cms-chart-data=\"\"><thead><tr><th scope=\"col\">Category</th><th scope=\"col\">Series 1</th><th scope=\"col\">Series 2</th></tr></thead><tbody><tr><th scope=\"row\">a</th><td>1</td><td>2</td></tr><tr><th scope=\"row\">b</th><td></td><td>3</td></tr></tbody></table></figure>"
+    },
+    {
+      "name": "chart: missing bound data keeps the title and shows the empty state",
+      "nodes": [
+        {
+          "id": "c",
+          "type": "chart",
+          "parent": null,
+          "order": "a",
+          "props": {
+            "kind": "line",
+            "title": "Traffic",
+            "categories": {
+              "$bind": "nope"
+            },
+            "series": {
+              "$bind": "nope2"
+            }
+          },
+          "style": {
+            "base": {}
+          }
+        }
+      ],
+      "data": {},
+      "html": "<figure data-cms=\"c\" data-cms-island=\"chart\" data-cms-chart=\"line\" data-cms-chart-size=\"md\"><figcaption>Traffic</figcaption><p data-cms-empty=\"\">No data available</p></figure>"
+    },
+    {
+      "name": "chart: malformed series, unknown kind and size fall back",
+      "nodes": [
+        {
+          "id": "c",
+          "type": "chart",
+          "parent": null,
+          "order": "a",
+          "props": {
+            "kind": "radar",
+            "size": "huge",
+            "categories": [
+              "x"
+            ],
+            "series": {
+              "$bind": "s"
+            }
+          },
+          "style": {
+            "base": {}
+          }
+        }
+      ],
+      "data": {
+        "s": [
+          {
+            "name": "A",
+            "data": "oops"
+          }
+        ]
+      },
+      "html": "<figure data-cms=\"c\" data-cms-island=\"chart\" data-cms-chart=\"column\" data-cms-chart-size=\"md\"><p data-cms-empty=\"\">No data available</p></figure>"
+    },
+    {
+      "name": "chart: a category that is not a string or number is malformed",
+      "nodes": [
+        {
+          "id": "c",
+          "type": "chart",
+          "parent": null,
+          "order": "a",
+          "props": {
+            "kind": "bar",
+            "categories": {
+              "$bind": "cats"
+            },
+            "series": [
+              1,
+              2
+            ],
+            "emptyText": "Chart unavailable"
+          },
+          "style": {
+            "base": {}
+          }
+        }
+      ],
+      "data": {
+        "cats": [
+          "a",
+          {
+            "x": 1
+          }
+        ]
+      },
+      "html": "<figure data-cms=\"c\" data-cms-island=\"chart\" data-cms-chart=\"bar\" data-cms-chart-size=\"md\"><p data-cms-empty=\"\">Chart unavailable</p></figure>"
+    }
+  ],
+  "requests": {
+    "nodes": [
+      {
+        "id": "t",
+        "type": "text",
+        "parent": null,
+        "order": "a",
+        "props": {
+          "content": {
+            "$bind": "page.title"
+          }
+        },
+        "style": {
+          "base": {}
+        }
+      },
+      {
+        "id": "k",
+        "type": "kpi",
+        "parent": null,
+        "order": "a",
+        "props": {
+          "label": "Revenue",
+          "value": {
+            "$bind": "m.rev"
+          }
+        },
+        "style": {
+          "base": {}
+        }
+      },
+      {
+        "id": "c",
+        "type": "chart",
+        "parent": null,
+        "order": "a",
+        "props": {
+          "title": "Signups",
+          "categories": {
+            "$bind": "s.months",
+            "$source": [
+              "stats",
+              "signups"
+            ]
+          },
+          "series": {
+            "$bind": "s.series"
+          },
+          "kind": "line"
+        },
+        "style": {
+          "base": {}
+        }
+      },
+      {
+        "id": "r",
+        "type": "stack",
+        "parent": null,
+        "order": "a",
+        "props": {},
+        "style": {
+          "base": {}
+        },
+        "repeat": {
+          "each": {
+            "$bind": "items"
+          },
+          "as": "item"
+        }
+      }
+    ],
+    "expected": [
+      {
+        "node": "c",
+        "prop": "categories",
+        "path": "s.months",
+        "source": [
+          "stats",
+          "signups"
+        ],
+        "expects": {
+          "type": "array",
+          "items": {
+            "type": [
+              "string",
+              "number"
+            ]
+          }
+        }
+      },
+      {
+        "node": "c",
+        "prop": "series",
+        "path": "s.series",
+        "expects": {
+          "type": "array",
+          "items": {
+            "anyOf": [
+              {
+                "type": "number"
+              },
+              {
+                "type": "object",
+                "required": [
+                  "data"
+                ],
+                "properties": {
+                  "name": {
+                    "type": "string"
+                  },
+                  "data": {
+                    "type": "array",
+                    "items": {
+                      "type": [
+                        "number",
+                        "null"
+                      ]
+                    }
+                  }
+                }
+              }
+            ]
+          }
+        }
+      },
+      {
+        "node": "k",
+        "prop": "value",
+        "path": "m.rev",
+        "expects": {
+          "type": "number"
+        }
+      },
+      {
+        "node": "r",
+        "prop": "repeat.each",
+        "path": "items",
+        "expects": null
+      },
+      {
+        "node": "t",
+        "prop": "content",
+        "path": "page.title",
+        "expects": null
+      }
+    ]
+  }
+}

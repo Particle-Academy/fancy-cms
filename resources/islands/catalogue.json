@@ -1,0 +1,124 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$defs": {
+    "Binding": {
+      "type": "object",
+      "required": ["$bind"],
+      "properties": {
+        "$bind": { "type": "string", "description": "dot.path into the host data context" },
+        "$source": { "type": "array", "items": { "type": ["string", "number"] }, "description": "live query key" }
+      }
+    },
+    "Text": { "anyOf": [{ "type": "string" }, { "$ref": "#/$defs/Binding" }] },
+    "Number": { "anyOf": [{ "type": "number" }, { "$ref": "#/$defs/Binding" }] },
+    "Rows": { "anyOf": [{ "type": "array", "items": { "type": "object" } }, { "$ref": "#/$defs/Binding" }] },
+    "format": { "enum": ["number", "currency", "percent"], "description": "default number; percent takes a ratio, 0.125 is 12.5%" },
+    "currency": { "type": "string", "pattern": "^[A-Z]{3}$", "description": "ISO 4217 code, default USD" },
+    "decimals": { "type": "integer", "minimum": 0, "maximum": 6, "description": "fixed decimals; default automatic" },
+    "emptyText": { "$ref": "#/$defs/Text", "description": "shown when bound data is missing or malformed" }
+  },
+  "types": {
+    "chart": {
+      "description": "Bar, column, line, pie or funnel chart. The server renders an accessible data table; the chart loads when visible.",
+      "hydrate": "lazy",
+      "props": {
+        "type": "object",
+        "required": ["categories", "series"],
+        "properties": {
+          "kind": { "enum": ["column", "bar", "line", "pie", "funnel"], "default": "column" },
+          "title": { "$ref": "#/$defs/Text" },
+          "categories": { "anyOf": [{ "type": "array", "items": { "type": ["string", "number"] } }, { "$ref": "#/$defs/Binding" }] },
+          "series": {
+            "anyOf": [
+              { "type": "array", "items": { "anyOf": [{ "type": "number" }, { "type": "object", "required": ["data"], "properties": { "name": { "type": "string" }, "data": { "type": "array", "items": { "type": ["number", "null"] } } } }] } },
+              { "$ref": "#/$defs/Binding" }
+            ],
+            "description": "pie and funnel use the first series"
+          },
+          "categoryLabel": { "$ref": "#/$defs/Text" },
+          "size": { "enum": ["sm", "md", "lg"], "default": "md" },
+          "format": { "$ref": "#/$defs/format" },
+          "currency": { "$ref": "#/$defs/currency" },
+          "decimals": { "$ref": "#/$defs/decimals" },
+          "emptyText": { "$ref": "#/$defs/emptyText" }
+        }
+      },
+      "example": { "kind": "column", "title": "Signups", "categories": { "$bind": "signups.months" }, "series": { "$bind": "signups.series" } }
+    },
+    "kpi": {
+      "description": "Stat tile: label, formatted value, and an optional delta with its trend.",
+      "hydrate": "none",
+      "props": {
+        "type": "object",
+        "required": ["value"],
+        "properties": {
+          "label": { "$ref": "#/$defs/Text" },
+          "value": { "$ref": "#/$defs/Number" },
+          "delta": { "$ref": "#/$defs/Number" },
+          "trend": { "anyOf": [{ "enum": ["up", "down", "flat"] }, { "$ref": "#/$defs/Binding" }], "description": "default: the sign of delta" },
+          "goodDirection": { "enum": ["up", "down"], "default": "up" },
+          "format": { "$ref": "#/$defs/format" },
+          "currency": { "$ref": "#/$defs/currency" },
+          "decimals": { "$ref": "#/$defs/decimals" },
+          "deltaFormat": { "$ref": "#/$defs/format", "default": "percent" },
+          "deltaDecimals": { "$ref": "#/$defs/decimals" },
+          "emptyText": { "$ref": "#/$defs/emptyText" }
+        }
+      },
+      "example": { "label": "Revenue", "value": { "$bind": "metrics.revenue" }, "delta": { "$bind": "metrics.revenueChange" }, "format": "currency" }
+    },
+    "table": {
+      "description": "Data table with typed columns, a sort and an optional totals row.",
+      "hydrate": "none",
+      "props": {
+        "type": "object",
+        "required": ["columns", "rows"],
+        "properties": {
+          "columns": {
+            "type": "array",
+            "items": {
+              "type": "object",
+              "required": ["key"],
+              "properties": {
+                "key": { "type": "string" },
+                "label": { "type": "string" },
+                "format": { "$ref": "#/$defs/format" },
+                "currency": { "$ref": "#/$defs/currency" },
+                "decimals": { "$ref": "#/$defs/decimals" },
+                "align": { "enum": ["start", "center", "end"] },
+                "total": { "enum": ["sum", "avg", "min", "max", "count"] }
+              }
+            }
+          },
+          "rows": { "$ref": "#/$defs/Rows" },
+          "caption": { "$ref": "#/$defs/Text" },
+          "sort": { "type": "object", "required": ["key"], "properties": { "key": { "type": "string" }, "dir": { "enum": ["asc", "desc"] } } },
+          "totals": { "type": "boolean" },
+          "totalsLabel": { "$ref": "#/$defs/Text" },
+          "emptyText": { "$ref": "#/$defs/emptyText" }
+        }
+      },
+      "example": { "caption": "Sales by region", "columns": [{ "key": "region", "label": "Region" }, { "key": "sales", "label": "Sales", "format": "currency", "total": "sum" }], "rows": { "$bind": "sales.rows" }, "sort": { "key": "sales", "dir": "desc" }, "totals": true }
+    },
+    "leaderboard": {
+      "description": "Ranked rows, highest first by default. Ties share a rank.",
+      "hydrate": "none",
+      "props": {
+        "type": "object",
+        "required": ["rows"],
+        "properties": {
+          "rows": { "$ref": "#/$defs/Rows" },
+          "labelKey": { "type": "string", "default": "name" },
+          "valueKey": { "type": "string", "default": "value" },
+          "order": { "enum": ["desc", "asc"], "default": "desc" },
+          "limit": { "type": "integer", "minimum": 1, "maximum": 100, "default": 10 },
+          "format": { "$ref": "#/$defs/format" },
+          "currency": { "$ref": "#/$defs/currency" },
+          "decimals": { "$ref": "#/$defs/decimals" },
+          "emptyText": { "$ref": "#/$defs/emptyText" }
+        }
+      },
+      "example": { "rows": { "$bind": "contest.entries" }, "valueKey": "points", "limit": 5 }
+    }
+  }
+}

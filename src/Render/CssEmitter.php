@@ -95,7 +95,16 @@ final class CssEmitter
             return '';
         }
 
-        return implode("\n\n", [self::BASE_CSS, ...$blocks])."\n";
+        // The infographic block only for pages that place one, so the rest pay nothing.
+        $infographics = false;
+        foreach ($doc['nodes'] ?? [] as $node) {
+            if ((is_array($node) || $node instanceof \stdClass) && Infographics::isType(((array) $node)['type'] ?? null)) {
+                $infographics = true;
+                break;
+            }
+        }
+
+        return implode("\n\n", [self::BASE_CSS, ...($infographics ? [Infographics::CSS] : []), ...$blocks])."\n";
     }
 
     private static function selectorFor(string $id): string

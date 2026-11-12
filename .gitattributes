@@ -6,3 +6,5 @@ fonts/**/*.woff2 binary
 fonts/**/OFL.txt -text
 fonts/**/manifest.json text eol=lf
 fonts/**/NOTICE text eol=lf
+resources/islands/*.json text eol=lf
+tests/fixtures/infographics.json text eol=lf

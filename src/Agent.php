@@ -5,6 +5,7 @@ declare(strict_types=1);
 namespace FancyCms;
 
 use FancyCms\Document\Icons;
+use FancyCms\Islands\IslandCatalogue;
 use RuntimeException;
 
 /** The package-owned prompt and compact, JSON-friendly agent catalogue. */
@@ -27,9 +28,14 @@ final class Agent
         return $text;
     }
 
-    /** Shorthand shapes, not JSON Schema. Serialize without pretty printing. */
-    public static function describe(): array
+    /**
+     * Shorthand shapes for the native elements, plus the island catalogue as
+     * JSON Schema (`islands`): the infographic kit and every island the host
+     * registered. Serialize without pretty printing.
+     */
+    public static function describe(?IslandCatalogue $islands = null): array
     {
+        $islands ??= IslandCatalogue::builtin();
         $landmarks = ['section', 'header', 'nav', 'main', 'footer', 'article', 'aside', 'div'];
         $container = ['as' => $landmarks, 'anchor' => '^[a-z][a-z0-9-]{0,63}$'];
         $style = [];
@@ -52,6 +58,23 @@ final class Agent
             'direction' => ['row', 'column'], 'align' => ['start', 'center', 'end', 'stretch'], 'justify' => ['start', 'center', 'end', 'between', 'around'],
         ];
 
+        $elements = [
+            'section' => $container, 'stack' => $container, 'grid' => $container,
+            'frame' => $container + ['decorative' => 'literal boolean'], 'shape' => $container + ['decorative' => 'literal boolean'], 'card' => $container,
+            'text' => ['content' => 'string'], 'heading' => ['content' => 'string', 'level' => [1, 2, 3, 4, 5, 6]],
+            'link' => ['content' => 'string', 'href' => 'safe relative/http/https/mailto/tel URL'],
+            'list' => ['items' => 'string[]', 'ordered' => 'boolean'],
+            'divider' => [], 'callout' => ['content' => 'string', 'variant' => ['info', 'success', 'warning', 'danger']],
+            'code' => ['content' => 'string'],
+            'button' => ['label' => 'string', 'href' => 'safe relative/http/https/mailto/tel URL', 'variant' => ['primary', 'outline', 'ghost']],
+            'image' => ['asset?' => 'literal host-supplied asset handle; use the host catalogue, never invent URLs, dimensions or variants', 'src' => 'legacy URL only when asset is absent', 'alt' => 'string', 'fit' => ['cover', 'contain', 'fill', 'none', 'scale-down'], 'loading' => ['lazy', 'eager']],
+            'icon' => ['name' => 'Lucide name; search cms_icons(query,cursor)', 'decorative' => 'boolean (required); true hides from assistive technology', 'label?' => 'literal string, required and nonblank when decorative=false; max 1024 UTF-8 bytes'],
+            'repeater' => ['note' => 'repeat.each/as live on Node; dynamic behavior requires browser runtime'],
+        ];
+        foreach ($islands->types() as $type) {
+            $elements[$type] = ['schema' => 'see islands.types.'.$type];
+        }
+
         return [
             'notation' => '? means optional; | means alternatives; named shapes below; props may use Binding except icon; icon props are closed literals; patches are shallow and null stays data',
             'ops' => [
@@ -67,19 +90,7 @@ final class Agent
                 'set_meta' => ['patch' => 'Meta'], 'set_theme' => ['patch' => 'JSON token record'],
                 'reorder_roots' => ['order' => 'all current root ids, exactly once'],
             ],
-            'elements' => [
-                'section' => $container, 'stack' => $container, 'grid' => $container,
-                'frame' => $container + ['decorative' => 'literal boolean'], 'shape' => $container + ['decorative' => 'literal boolean'], 'card' => $container,
-                'text' => ['content' => 'string'], 'heading' => ['content' => 'string', 'level' => [1, 2, 3, 4, 5, 6]],
-                'link' => ['content' => 'string', 'href' => 'safe relative/http/https/mailto/tel URL'],
-                'list' => ['items' => 'string[]', 'ordered' => 'boolean'],
-                'divider' => [], 'callout' => ['content' => 'string', 'variant' => ['info', 'success', 'warning', 'danger']],
-                'code' => ['content' => 'string'],
-                'button' => ['label' => 'string', 'href' => 'safe relative/http/https/mailto/tel URL', 'variant' => ['primary', 'outline', 'ghost']],
-                'image' => ['asset?' => 'literal host-supplied asset handle; use the host catalogue, never invent URLs, dimensions or variants', 'src' => 'legacy URL only when asset is absent', 'alt' => 'string', 'fit' => ['cover', 'contain', 'fill', 'none', 'scale-down'], 'loading' => ['lazy', 'eager']],
-                'icon' => ['name' => 'Lucide name; search cms_icons(query,cursor)', 'decorative' => 'boolean (required); true hides from assistive technology', 'label?' => 'literal string, required and nonblank when decorative=false; max 1024 UTF-8 bytes'],
-                'repeater' => ['note' => 'repeat.each/as live on Node; dynamic behavior requires browser runtime'],
-            ],
+            'elements' => $elements,
             'commonProps' => ['anchor' => '^[a-z][a-z0-9-]{0,63}$ (rendered as id)'],
             'decorativeRule' => 'frame/shape decorative:true emits aria-hidden; descendants may ONLY be frame, shape or decorative icon without actions. Meaningful content is refused on insert, move, prop or action edits. Other elements cannot use decorative except icon.',
             'shapes' => [
@@ -100,7 +111,9 @@ final class Agent
                 'richtext is excluded: host-authored HTML only. Hosts must exclude that type from untrusted tools or sanitize it before browser rendering.',
                 'Motion, actions and repeater behavior require the browser runtime. PHP renders native static elements; richtext HTML is not emitted by PHP.',
                 'Changes use node:<URL-encoded id> and page:<URL-encoded doc.id> handles. Pin writes to the observed revision; after surface_changed_under_you read changes and preserve human edits.',
+                'islands lists component types as JSON Schema. Place one as a node of that type; island:true is implied. chart/kpi/table/leaderboard carry the shape and $bind the numbers from host data; never type numbers in. Missing data renders an empty state.',
             ],
+            'islands' => $islands->toArray(),
         ];
     }
 }
