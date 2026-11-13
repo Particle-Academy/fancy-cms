@@ -112,7 +112,7 @@ final class Infographics
   font-variant-numeric: tabular-nums;
   font-weight: 700;
   line-height: 1.1;
-  overflow-wrap: anywhere;
+  overflow-wrap: break-word;
 }
 
 :where([data-cms-kpi-delta]) {
@@ -230,13 +230,16 @@ final class Infographics
 
 :where([data-cms-lb="label"]) {
   flex: 1;
-  min-width: 0;
-  overflow-wrap: anywhere;
+  overflow-wrap: break-word;
 }
 
 :where([data-cms-lb="value"]) {
   font-variant-numeric: tabular-nums;
   font-weight: 600;
+}
+
+:where([data-cms-kpi-value], [data-cms-lb="label"])[data-cms-wrap="anywhere"] {
+  overflow-wrap: anywhere;
 }
 
 :where(figure[data-cms-chart] figcaption) {
@@ -405,7 +408,8 @@ CSS;
         if ($n === null) {
             return $html.self::empty($props);
         }
-        $html .= '<p data-cms-kpi-value="">'.self::escape(NumberFormat::format($n, NumberFormat::spec($props['format'] ?? null, $props['currency'] ?? null, $props['decimals'] ?? null))).'</p>';
+        $value = NumberFormat::format($n, NumberFormat::spec($props['format'] ?? null, $props['currency'] ?? null, $props['decimals'] ?? null));
+        $html .= '<p data-cms-kpi-value=""'.self::wrap($value).'>'.self::escape($value).'</p>';
         $d = NumberFormat::toNumber($props['delta'] ?? null);
         if ($d === null) {
             return $html;
@@ -598,7 +602,7 @@ CSS;
             if ($i >= $limit) {
                 continue;
             }
-            $html .= '<li data-cms-rank="'.$ranks[$i].'"><span data-cms-lb="rank">'.$ranks[$i].'</span><span data-cms-lb="label">'.self::escape($r['label']).'</span><span data-cms-lb="value">'.self::escape(NumberFormat::format($r['n'], $spec)).'</span></li>';
+            $html .= '<li data-cms-rank="'.$ranks[$i].'"><span data-cms-lb="rank">'.$ranks[$i].'</span><span data-cms-lb="label"'.self::wrap($r['label']).'>'.self::escape($r['label']).'</span><span data-cms-lb="value">'.self::escape(NumberFormat::format($r['n'], $spec)).'</span></li>';
         }
 
         return $html.'</ol>';
@@ -655,6 +659,12 @@ CSS;
         $array = $record instanceof stdClass ? (array) $record : $record;
 
         return is_array($array) && array_key_exists($key, $array) ? $array[$key] : null;
+    }
+
+    /** ` data-cms-wrap="anywhere"` when the text holds a long token (TextWrap), else nothing. */
+    private static function wrap(string $text): string
+    {
+        return TextWrap::hasLongToken($text) ? ' data-cms-wrap="anywhere"' : '';
     }
 
     private static function escape(string $value): string

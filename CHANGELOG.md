@@ -38,6 +38,16 @@ upgrading.
   `@particle-academy/fancy-cms-ui` (shared `tests/fixtures/text-wrap.json`).
   Consumers do nothing, but upgrade `fancy-cms-ui` alongside: markup rendered by
   one and hydrated by an older other differs by the new attribute.
+- **KPI values and leaderboard labels no longer break mid-word** (same defect,
+  in the infographic stylesheet since 0.9.0). Both had `overflow-wrap:
+  anywhere`, and the leaderboard label `min-width: 0`, so in narrow grid
+  columns "$1,200,000" broke as "$1,200,0/00" and leaderboard labels letter by
+  letter ("R/otterdam"). Both now get `break-word`; a value or label holding a
+  long token is marked `data-cms-wrap="anywhere"` and keeps `anywhere`.
+  Measured on a KPI grid page (two columns at 375px, four from 768px, plus a
+  leaderboard beside a KPI): 0 overflow and 0 mid-word breaks at 375, 768 and
+  1280px (6 with the 0.9.0 rules). Byte-identical to fancy-cms-ui (shared
+  `tests/fixtures/infographics.json`).
 
 ## [0.9.0] - 2026-11-12
 
