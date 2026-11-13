@@ -20,7 +20,7 @@ now know the `echart` node and render kit islands' text fallbacks.
 
 ### Added
 - `IslandCatalogue::kit()`: the built-ins plus every Fancy kit component as an
-  island (181 types, `react-fancy:Tabs` and the rest), from
+  island (180 types, `react-fancy:Tabs` and the rest), from
   `resources/islands/kit-catalogue.json`, which fancy-cms-ui generates from the
   components' prop types and ships byte-identical. Pass it to
   `Agent::describe()` and `PageRenderer::render()` in a host that renders with
