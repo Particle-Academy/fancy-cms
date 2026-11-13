@@ -9,6 +9,7 @@ require __DIR__.'/../src/Render/FontAssets.php';
 require __DIR__.'/../src/Exceptions/FontResolutionException.php';
 require __DIR__.'/../src/Render/ImageAssets.php';
 require __DIR__.'/../src/Render/PageRenderer.php';
+require __DIR__.'/../src/Render/TextWrap.php';
 require __DIR__.'/../src/Render/Infographics.php';
 require __DIR__.'/../src/Render/Inputs.php';
 require __DIR__.'/../src/Data/PageInputs.php';

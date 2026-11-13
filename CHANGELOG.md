@@ -15,6 +15,30 @@ upgrading.
 
 ## [Unreleased]
 
+### Fixed
+
+- **Ordinary words, prices and stats no longer break mid-word at tablet
+  widths** (a regression in 0.9.0). The S11 fix gave every text node
+  `overflow-wrap: anywhere`, which lowers min-content, so grid tracks and flex
+  items shrank below whole words: lab runs 542 to 554, under two builder
+  models, showed "Discriminatio/n" in a three-column grid at 768px, menu prices
+  as "$/9" and "$2/2", and a "41%" stat as "4/1/%". `CssEmitter::BASE_CSS` now
+  gives text nodes `overflow-wrap: break-word`, which breaks a word only when it
+  cannot fit its line and leaves min-content alone. `PageRenderer` marks a
+  text, heading, link, callout or list node whose rendered text holds a long
+  token (20 code points or more with no space, hyphen or dash: a URL, an email,
+  hostile input) with `data-cms-wrap="anywhere"`, and that node keeps
+  `anywhere` (new `Render\TextWrap`), so S11 stays fixed: that token alone
+  cannot widen a grid track, a flex row or the page. A node's own
+  `overflowWrap` still wins. Measured in Chrome on the five lab pages, the
+  hostile-facts page that measured 380px at 375px and an adversarial page, at
+  375, 768 and 1280px: no horizontal overflow and no mid-word break in a word
+  that fits its track (13 such breaks with the 0.9.0 rule; 0 now), by
+  `parity/text-wrap-browser.mjs` in fancy-cms-ui. Byte-identical to
+  `@particle-academy/fancy-cms-ui` (shared `tests/fixtures/text-wrap.json`).
+  Consumers do nothing, but upgrade `fancy-cms-ui` alongside: markup rendered by
+  one and hydrated by an older other differs by the new attribute.
+
 ## [0.9.0] - 2026-11-12
 
 **BREAKING only if your documents already use a node type named `chart`,

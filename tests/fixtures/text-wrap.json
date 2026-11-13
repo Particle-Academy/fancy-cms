@@ -1,66 +1,148 @@
 {
-  "about": "Shared PHP/React parity spec for long unbroken tokens (lab finding S11). Byte-identical in fancy-cms and fancy-cms-ui. The base stylesheet must carry `rule` exactly; every case's nodes must render exactly `html`, and `wraps` says whether the node's own element is matched by the rule. `styles` are the authored overflowWrap values and the declarations each must emit (after the base stylesheet), refusals included.",
-  "rule": ":where(h1, h2, h3, h4, h5, h6, p, ul, ol, a:not([data-cms-button]), span, [data-cms-callout])[data-cms] {\n  overflow-wrap: anywhere;\n}",
+  "about": "Shared PHP/React parity spec for how text wraps (lab finding S11, and the 0.9.0 regression it caused). Byte-identical in fancy-cms and fancy-cms-ui. The base stylesheet must carry `rule` and then `longRule`, exactly, with nothing between them. Text-bearing nodes get `overflow-wrap: break-word`, which breaks a word only when it cannot fit its line and never lowers min-content, so grid tracks and flex items still size to whole words. A node whose rendered text holds a long token (`longToken` code points or more with no space, tab, newline, carriage return, form feed, zero-width space, hyphen-minus, U+2010, en dash or em dash) is marked `data-cms-wrap=\"anywhere\"` and gets `overflow-wrap: anywhere`, so that token alone cannot widen a grid track, a flex row or the page. Every case's nodes must render exactly `html`; `wraps` says whether the element is matched by `rule`, and `anywhere` whether it is matched by `longRule`. `styles` are the authored overflowWrap values and the declarations each must emit (after the base stylesheet), refusals included.",
+  "rule": ":where(h1, h2, h3, h4, h5, h6, p, ul, ol, a:not([data-cms-button]), span, [data-cms-callout])[data-cms] {\n  overflow-wrap: break-word;\n}",
+  "longRule": ":where(h1, h2, h3, h4, h5, h6, p, ul, ol, a:not([data-cms-button]), span, [data-cms-callout])[data-cms-wrap=\"anywhere\"] {\n  overflow-wrap: anywhere;\n}",
+  "longToken": 20,
   "cases": [
     {
       "name": "text holding the token hostile-facts measured at 380px",
       "wraps": true,
+      "anywhere": true,
       "nodes": [
         { "id": "t", "type": "text", "parent": null, "order": "a0", "props": { "content": "<script>window.__pwned=1</script>Buttons since 1999" }, "style": { "base": {} } }
       ],
-      "html": "<p data-cms=\"t\">&lt;script&gt;window.__pwned=1&lt;/script&gt;Buttons since 1999</p>"
+      "html": "<p data-cms=\"t\" data-cms-wrap=\"anywhere\">&lt;script&gt;window.__pwned=1&lt;/script&gt;Buttons since 1999</p>"
     },
     {
-      "name": "heading",
+      "name": "heading with a long word between hyphens",
       "wraps": true,
+      "anywhere": true,
       "nodes": [
         { "id": "h", "type": "heading", "parent": null, "order": "a0", "props": { "content": "Supercalifragilisticexpialidocious-and-then-some", "level": 1 }, "style": { "base": {} } }
       ],
-      "html": "<h1 data-cms=\"h\">Supercalifragilisticexpialidocious-and-then-some</h1>"
+      "html": "<h1 data-cms=\"h\" data-cms-wrap=\"anywhere\">Supercalifragilisticexpialidocious-and-then-some</h1>"
     },
     {
-      "name": "list items inherit from the list",
+      "name": "a list is marked when any item holds a long token",
       "wraps": true,
+      "anywhere": true,
       "nodes": [
-        { "id": "l", "type": "list", "parent": null, "order": "a0", "props": { "items": ["https://example.com/a/very/long/path/with/no/breaks/at/all"] }, "style": { "base": {} } }
+        { "id": "l", "type": "list", "parent": null, "order": "a0", "props": { "items": ["Short item", "https://example.com/a/very/long/path/with/no/breaks/at/all"] }, "style": { "base": {} } }
       ],
-      "html": "<ul data-cms=\"l\"><li>https://example.com/a/very/long/path/with/no/breaks/at/all</li></ul>"
+      "html": "<ul data-cms=\"l\" data-cms-wrap=\"anywhere\"><li>Short item</li><li>https://example.com/a/very/long/path/with/no/breaks/at/all</li></ul>"
     },
     {
       "name": "a link with an href",
       "wraps": true,
+      "anywhere": true,
       "nodes": [
         { "id": "k", "type": "link", "parent": null, "order": "a0", "props": { "content": "https://example.com/a/very/long/path/with/no/breaks/at/all", "href": "/a" }, "style": { "base": {} } }
       ],
-      "html": "<a data-cms=\"k\" href=\"/a\">https://example.com/a/very/long/path/with/no/breaks/at/all</a>"
+      "html": "<a data-cms=\"k\" href=\"/a\" data-cms-wrap=\"anywhere\">https://example.com/a/very/long/path/with/no/breaks/at/all</a>"
     },
     {
       "name": "a link without an href is a span",
       "wraps": true,
+      "anywhere": true,
       "nodes": [
         { "id": "s", "type": "link", "parent": null, "order": "a0", "props": { "content": "AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA" }, "style": { "base": {} } }
       ],
-      "html": "<span data-cms=\"s\">AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA</span>"
+      "html": "<span data-cms=\"s\" data-cms-wrap=\"anywhere\">AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA</span>"
     },
     {
       "name": "callout",
       "wraps": true,
+      "anywhere": true,
       "nodes": [
         { "id": "c", "type": "callout", "parent": null, "order": "a0", "props": { "content": "AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA", "variant": "warning" }, "style": { "base": {} } }
       ],
-      "html": "<div data-cms=\"c\" data-cms-callout=\"warning\">AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA</div>"
+      "html": "<div data-cms=\"c\" data-cms-callout=\"warning\" data-cms-wrap=\"anywhere\">AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA</div>"
+    },
+    {
+      "name": "ordinary words, prices and stats keep their min-content (lab runs 542 to 554)",
+      "wraps": true,
+      "anywhere": false,
+      "nodes": [
+        { "id": "o", "type": "text", "parent": null, "order": "a0", "props": { "content": "Discrimination $24 41% straightforward orders@example.com." }, "style": { "base": {} } }
+      ],
+      "html": "<p data-cms=\"o\">Discrimination $24 41% straightforward orders@example.com.</p>"
+    },
+    {
+      "name": "19 code points is not a long token",
+      "wraps": true,
+      "anywhere": false,
+      "nodes": [
+        { "id": "n19", "type": "text", "parent": null, "order": "a0", "props": { "content": "abcdefghijklmnopqrs" }, "style": { "base": {} } }
+      ],
+      "html": "<p data-cms=\"n19\">abcdefghijklmnopqrs</p>"
+    },
+    {
+      "name": "20 code points is a long token",
+      "wraps": true,
+      "anywhere": true,
+      "nodes": [
+        { "id": "n20", "type": "text", "parent": null, "order": "a0", "props": { "content": "abcdefghijklmnopqrst" }, "style": { "base": {} } }
+      ],
+      "html": "<p data-cms=\"n20\" data-cms-wrap=\"anywhere\">abcdefghijklmnopqrst</p>"
+    },
+    {
+      "name": "length is counted in code points, not UTF-16 units",
+      "wraps": true,
+      "anywhere": false,
+      "nodes": [
+        { "id": "e", "type": "text", "parent": null, "order": "a0", "props": { "content": "😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀" }, "style": { "base": {} } }
+      ],
+      "html": "<p data-cms=\"e\">😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀</p>"
+    },
+    {
+      "name": "hyphens, en dashes, em dashes and whitespace split tokens",
+      "wraps": true,
+      "anywhere": false,
+      "nodes": [
+        { "id": "d", "type": "heading", "parent": null, "order": "a0", "props": { "content": "privacy-friendly\u2013distraction\u2010free\u2014Saturday\tSunday\nMonday\u200bTuesday", "level": 2 }, "style": { "base": {} } }
+      ],
+      "html": "<h2 data-cms=\"d\">privacy-friendly\u2013distraction\u2010free\u2014Saturday\tSunday\nMonday\u200bTuesday</h2>"
+    },
+    {
+      "name": "a non-breaking space does not split a token",
+      "wraps": true,
+      "anywhere": true,
+      "nodes": [
+        { "id": "nb", "type": "text", "parent": null, "order": "a0", "props": { "content": "Opening\u00a017:00\u00a0to\u00a022:30" }, "style": { "base": {} } }
+      ],
+      "html": "<p data-cms=\"nb\" data-cms-wrap=\"anywhere\">Opening\u00a017:00\u00a0to\u00a022:30</p>"
     },
     {
       "name": "a button keeps its label whole",
       "wraps": false,
+      "anywhere": false,
       "nodes": [
         { "id": "b", "type": "button", "parent": null, "order": "a0", "props": { "label": "Subscribe", "href": "/go" }, "style": { "base": {} } }
       ],
       "html": "<a data-cms=\"b\" href=\"/go\" data-cms-button=\"primary\">Subscribe</a>"
     },
     {
+      "name": "a button is never marked, however long its label",
+      "wraps": false,
+      "anywhere": false,
+      "nodes": [
+        { "id": "bl", "type": "button", "parent": null, "order": "a0", "props": { "label": "AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA", "href": "/go" }, "style": { "base": {} } }
+      ],
+      "html": "<a data-cms=\"bl\" href=\"/go\" data-cms-button=\"primary\">AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA</a>"
+    },
+    {
+      "name": "code keeps its own scroller",
+      "wraps": false,
+      "anywhere": false,
+      "nodes": [
+        { "id": "cd", "type": "code", "parent": null, "order": "a0", "props": { "content": "AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA" }, "style": { "base": {} } }
+      ],
+      "html": "<div data-cms=\"cd\"><pre><code>AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA</code></pre></div>"
+    },
+    {
       "name": "a container is not a text node",
       "wraps": false,
+      "anywhere": false,
       "nodes": [
         { "id": "g", "type": "stack", "layout": "stack", "parent": null, "order": "a0", "props": {}, "style": { "base": {} } }
       ],

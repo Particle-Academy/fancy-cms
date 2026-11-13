@@ -9,6 +9,7 @@ use FancyCms\Document\PageDoc;
 use FancyCms\Document\PageJson;
 use FancyCms\Render\CssEmitter;
 use FancyCms\Render\PageRenderer;
+use FancyCms\Render\TextWrap;
 use FancyCms\Tests\Support\PageFixtures as F;
 use PHPUnit\Framework\Attributes\DataProvider;
 use PHPUnit\Framework\TestCase;
@@ -18,12 +19,15 @@ use PHPUnit\Framework\TestCase;
  * page sideways at 375px (hostile-facts measured 380px), and a document had
  * no way to fix it.
  *
- * Text-bearing nodes get `overflow-wrap: anywhere` from the base stylesheet.
- * `anywhere`, not `break-word`, because only `anywhere` lowers min-content
- * width, which grid tracks and a flex item's automatic minimum are sized
- * from. tests/fixtures/text-wrap.json is byte-identical in
- * @particle-academy/fancy-cms-ui, whose suite also checks, in a DOM, that the
- * rule's selector matches exactly the elements each case says it does.
+ * 0.9.0 gave every text node `overflow-wrap: anywhere`, which lowered every
+ * text node's min-content width, so grid tracks and flex items shrank below
+ * ordinary words at tablet widths and broke them mid-word ("Discriminatio/n",
+ * "$/9", "41/%": lab runs 542 to 554). Now text nodes get `break-word`, which
+ * keeps min-content, and only a node whose rendered text holds a long token is
+ * marked `data-cms-wrap="anywhere"`. tests/fixtures/text-wrap.json is
+ * byte-identical in @particle-academy/fancy-cms-ui, whose suite also checks, in
+ * a DOM, that each rule's selector matches exactly the elements each case says
+ * it does, and whose parity/text-wrap-browser.mjs measures it in a browser.
  */
 final class TextWrapParityTest extends TestCase
 {
@@ -60,9 +64,32 @@ final class TextWrapParityTest extends TestCase
         }
     }
 
-    public function test_the_base_stylesheet_carries_the_shared_rule(): void
+    public function test_the_base_stylesheet_carries_the_shared_rules_the_long_token_rule_straight_after(): void
     {
-        self::assertStringContainsString("\n\n".self::fixture()->rule."\n\n", CssEmitter::BASE_CSS);
+        self::assertStringContainsString("\n\n".self::fixture()->rule."\n\n".self::fixture()->longRule."\n\n", CssEmitter::BASE_CSS);
+    }
+
+    public function test_ordinary_text_never_lowers_its_min_content(): void
+    {
+        self::assertStringContainsString('overflow-wrap: break-word;', self::fixture()->rule);
+        self::assertStringNotContainsString("[data-cms] {\n  overflow-wrap: anywhere;", CssEmitter::BASE_CSS);
+    }
+
+    public function test_the_threshold_is_the_shared_one(): void
+    {
+        $n = self::fixture()->longToken;
+        self::assertSame($n, TextWrap::LONG_TOKEN);
+        self::assertFalse(TextWrap::hasLongToken(str_repeat('a', $n - 1)));
+        self::assertTrue(TextWrap::hasLongToken(str_repeat('a', $n)));
+    }
+
+    public function test_a_bound_value_is_measured_after_it_resolves(): void
+    {
+        $node = (object) ['id' => 'b', 'type' => 'text', 'parent' => null, 'order' => 'a0', 'props' => (object) ['content' => (object) ['$bind' => 'site.url']], 'style' => (object) ['base' => new \stdClass]];
+        self::assertSame(
+            '<p data-cms="b" data-cms-wrap="anywhere">https://example.com/a/very/long/path</p>',
+            PageRenderer::render(self::doc([$node]), ['site' => ['url' => 'https://example.com/a/very/long/path']])['html'],
+        );
     }
 
     public function test_the_rule_comes_after_the_margin_reset(): void

@@ -14,8 +14,11 @@ final class CssEmitter
     public const BASE_CSS = "/* fancy-cms base */\n\n".
         ":where([data-cms]) {\n  box-sizing: border-box;\n}\n\n".
         ":where(h1, h2, h3, h4, h5, h6, p, ul, ol)[data-cms] {\n  margin: 0;\n}\n\n".
-        // S11: `anywhere`, not `break-word`, so a long token also stops widening grid tracks and flex items.
-        ":where(h1, h2, h3, h4, h5, h6, p, ul, ol, a:not([data-cms-button]), span, [data-cms-callout])[data-cms] {\n  overflow-wrap: anywhere;\n}\n\n".
+        // S11: text gets `break-word`, which keeps min-content so grid tracks and flex items size to whole
+        // words; only a node holding a long token (TextWrap) gets `anywhere`. `anywhere` on every node broke
+        // "Discrimination" and "$9" mid-word at 768px (lab runs 542 to 554).
+        ":where(h1, h2, h3, h4, h5, h6, p, ul, ol, a:not([data-cms-button]), span, [data-cms-callout])[data-cms] {\n  overflow-wrap: break-word;\n}\n\n".
+        ":where(h1, h2, h3, h4, h5, h6, p, ul, ol, a:not([data-cms-button]), span, [data-cms-callout])[data-cms-wrap=\"anywhere\"] {\n  overflow-wrap: anywhere;\n}\n\n".
         ":where(ul, ol)[data-cms] {\n  padding-left: 1.25em;\n}\n\n".
         ":where(a[data-cms]) {\n  color: inherit;\n}\n\n".
         ":where([data-react-fancy-icon]) {\n  display: inline-flex;\n  align-items: center;\n  justify-content: center;\n  flex-shrink: 0;\n  width: 1em;\n  height: 1em;\n  vertical-align: middle;\n}\n\n".

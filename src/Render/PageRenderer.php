@@ -148,6 +148,18 @@ final class PageRenderer
         foreach ($attrs as $key => $value) {
             $attr .= ' '.$key.'="'.self::escape($value).'"';
         }
+        // A long token may break anywhere; ordinary words keep their min-content (TextWrap).
+        $listItems = [];
+        if (($node['type'] ?? null) === 'list') {
+            $resolved = self::resolve($props['items'] ?? null, $data);
+            if (is_array($resolved) && array_is_list($resolved)) {
+                $listItems = array_map(static fn ($item): string => JsValue::text($item), $resolved);
+            }
+        }
+        $wrap = TextWrap::wrapFor(is_string($node['type'] ?? null) ? $node['type'] : '', ($node['type'] ?? null) === 'list' ? '' : $text($props['content'] ?? null), $listItems);
+        if ($wrap !== null) {
+            $attr .= ' data-cms-wrap="'.$wrap.'"';
+        }
         if ($decorativeSafe && in_array($node['type'] ?? null, ['frame', 'shape'], true) && ($props['decorative'] ?? null) === true) {
             $attr .= ' aria-hidden="true"';
         }
