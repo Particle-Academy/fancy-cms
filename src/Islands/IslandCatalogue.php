@@ -40,6 +40,8 @@ final class IslandCatalogue
 
     private static ?self $builtin = null;
 
+    private static ?self $kit = null;
+
     /**
      * @param  array<string,mixed>  $document  `$schema` and `$defs`
      * @param  array<string,array<string,mixed>>  $types
@@ -64,6 +66,35 @@ final class IslandCatalogue
         }
 
         return self::$builtin;
+    }
+
+    /**
+     * The built-ins plus every Fancy kit component as an island (`react-fancy:Tabs`,
+     * `fancy-sheets:Spreadsheet` and the rest), read from
+     * resources/islands/kit-catalogue.json, which @particle-academy/fancy-cms-ui
+     * generates from the components' prop types and ships byte-identical as
+     * `KIT_ISLAND_CATALOGUE` (its `./kit` entry). For a host that renders with
+     * that entry's `kitIslands` registered: list types no host can render and an
+     * agent will place them.
+     */
+    public static function kit(): self
+    {
+        if (self::$kit === null) {
+            $path = dirname(__DIR__, 2).'/resources/islands/kit-catalogue.json';
+            $json = is_file($path) ? file_get_contents($path) : false;
+            if ($json === false) {
+                throw new RuntimeException('[fancy-cms] resources/islands/kit-catalogue.json is missing from this install.');
+            }
+            self::$kit = self::builtin()->merge($json);
+        }
+
+        return self::$kit;
+    }
+
+    /** Whether a type renders its child nodes (`slot: children`): a Card, a Modal's body. */
+    public function rendersChildren(string $type): bool
+    {
+        return ($this->types[$type]['slot'] ?? null) === 'children';
     }
 
     /**
@@ -167,6 +198,35 @@ final class IslandCatalogue
         return $this->document + ['types' => $this->types];
     }
 
+    private static function isTextFallback(mixed $steps): bool
+    {
+        if (! is_array($steps) || ! array_is_list($steps)) {
+            return false;
+        }
+        foreach ($steps as $step) {
+            $s = $step instanceof stdClass ? get_object_vars($step) : $step;
+            if (! is_array($s) || $s === [] || array_is_list($s)) {
+                return false;
+            }
+            $keys = array_keys($s);
+            if (count($keys) === 1 && in_array($keys[0], ['text', 'code'], true)) {
+                if (! is_string($s[$keys[0]])) {
+                    return false;
+                }
+
+                continue;
+            }
+            if (! in_array('list', $keys, true) || array_diff($keys, ['list', 'fields']) !== [] || ! is_string($s['list'])) {
+                return false;
+            }
+            if (array_key_exists('fields', $s) && (! is_array($s['fields']) || ! array_is_list($s['fields']) || array_filter($s['fields'], 'is_string') !== $s['fields'])) {
+                return false;
+            }
+        }
+
+        return true;
+    }
+
     /** @return array<string,mixed> the definition in a fixed key order */
     private static function normalise(string $type, array $d): array
     {
@@ -190,6 +250,24 @@ final class IslandCatalogue
                 throw new InvalidArgumentException("[fancy-cms] island \"{$type}\" example must be a props object.");
             }
             $out['example'] = $example;
+        }
+        if (array_key_exists('package', $d)) {
+            if (! is_string($d['package']) || $d['package'] === '') {
+                throw new InvalidArgumentException("[fancy-cms] island \"{$type}\" package must be a package name.");
+            }
+            $out['package'] = $d['package'];
+        }
+        if (array_key_exists('slot', $d)) {
+            if ($d['slot'] !== 'children') {
+                throw new InvalidArgumentException("[fancy-cms] island \"{$type}\" slot must be \"children\".");
+            }
+            $out['slot'] = 'children';
+        }
+        if (array_key_exists('textFallback', $d)) {
+            if (! self::isTextFallback($d['textFallback'])) {
+                throw new InvalidArgumentException("[fancy-cms] island \"{$type}\" textFallback must be a list of {text}, {code} or {list, fields?} steps.");
+            }
+            $out['textFallback'] = $d['textFallback'];
         }
 
         return $out;

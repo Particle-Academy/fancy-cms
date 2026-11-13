@@ -251,6 +251,24 @@ final class PageRenderer
                 $declared = $declared || ($decl['node'] === (string) ($node['id'] ?? $id) && $decl['name'] === $name);
             }
             $inner = Inputs::inner($resolved, array_key_exists($name, $inputs) ? $inputs[$name] : null, $declared);
+        } elseif ($type === 'echart') {
+            // The figure's text; the canvas is the browser's (fancy-cms-ui src/react/echart.tsx).
+            $title = $text($props['title'] ?? null);
+            $summary = $text($props['summary'] ?? null);
+            $inner = ($title === '' ? '' : '<figcaption>'.$escape($title).'</figcaption>').($summary === '' ? '' : '<p data-cms-echart-summary="">'.$escape($summary).'</p>');
+        } elseif ($isIsland && is_string($type) && (($islands->definition($type)['textFallback'] ?? null) !== null || $islands->rendersChildren($type))) {
+            // A kit island's first byte: its text, then (a container island) its child nodes.
+            $steps = $islands->definition($type)['textFallback'] ?? [];
+            $resolved = [];
+            foreach ($props as $key => $value) {
+                $resolved[$key] = self::resolve($value, $data);
+            }
+            $inner = TextFallback::html(array_values((array) $steps), $resolved, $escape);
+            if ($islands->rendersChildren($type)) {
+                foreach (self::childrenOf($doc, $id) as $childId) {
+                    $inner .= self::renderNode($doc, $childId, $data, $preloads, $decorativeSafe, $imageResolver, $islands, $inputs);
+                }
+            }
         } elseif (! $isIsland || in_array($type, ['section', 'stack', 'grid', 'frame', 'shape', 'card'], true)) {
             foreach (self::childrenOf($doc, $id) as $childId) {
                 $inner .= self::renderNode($doc, $childId, $data, $preloads, $decorativeSafe, $imageResolver, $islands, $inputs);
@@ -317,6 +335,9 @@ final class PageRenderer
         }
         if (Infographics::isType($type)) {
             return Infographics::element($type, $props, $text);
+        }
+        if ($type === 'echart') {
+            return ['figure', ['data-cms-echart' => '']];
         }
         if ($type === 'input') {
             return Inputs::element($props, $text);

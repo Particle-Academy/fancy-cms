@@ -4,6 +4,7 @@ declare(strict_types=1);
 
 namespace FancyCms\Document;
 
+use FancyCms\Render\EchartOption;
 use stdClass;
 
 /** @internal Shared hand-written checks; no execution, coercion or repair. */
@@ -123,6 +124,19 @@ final class Schema
         }
         if (($node['type'] ?? null) === 'icon' && ! Icons::validProps($node['props'] ?? null)) {
             $this->error($path.'.props', 'allowlisted icon name, decorative boolean and label when meaningful; no other props', $node['props'] ?? null);
+        }
+        // The echart node's option is a safe subset of ECharts (Render\EchartOption):
+        // a document that carries code, markup or a link in it is not a document.
+        if (($node['type'] ?? null) === 'echart' && is_array($node['props'] ?? null)) {
+            $option = $node['props']['option'] ?? null;
+            if ($option === null || (is_array($option) && is_string($option['$bind'] ?? null) && count($option) === 1)) {
+                // Not set yet (an echart just inserted renders its text only), or
+                // bound as a whole: validated when it resolves, at render.
+            } else {
+                foreach (EchartOption::errors($option) as $at) {
+                    $this->error($path.'.props.option'.substr($at, 1), 'ECharts option in the safe subset (no functions, markup, links, images or unlisted keys)', null);
+                }
+            }
         }
         if (array_key_exists('layout', $node)) {
             $this->enum($node['layout'], ['free', 'stack', 'grid'], $path.'.layout');

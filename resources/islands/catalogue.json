@@ -47,6 +47,21 @@
       },
       "example": { "kind": "column", "title": "Signups", "categories": { "$bind": "signups.months" }, "series": { "$bind": "signups.series" } }
     },
+    "echart": {
+      "description": "Any ECharts chart from option, a safe subset (no code, HTML, links or images). Title and summary are its server render.",
+      "hydrate": "lazy",
+      "props": {
+        "type": "object",
+        "required": ["title", "summary", "option"],
+        "properties": {
+          "title": { "$ref": "#/$defs/Text" },
+          "summary": { "$ref": "#/$defs/Text", "description": "the chart in words" },
+          "option": { "type": "object", "description": "keys: title legend grid xAxis yAxis radar polar dataZoom visualMap tooltip dataset series color textStyle; series: line bar pie scatter radar tree treemap sunburst boxplot candlestick heatmap graph sankey funnel gauge themeRiver" },
+          "height": { "type": "number", "minimum": 160, "maximum": 800 }
+        }
+      },
+      "example": { "title": "Tax", "summary": "Q1 $1,200; Q2 $1,450.", "option": { "dataset": { "source": { "$bind": "tax.rows" } }, "xAxis": { "type": "category" }, "yAxis": {}, "series": [{ "type": "bar" }] } }
+    },
     "kpi": {
       "description": "Stat tile: label, formatted value, and an optional delta with its trend.",
       "hydrate": "none",

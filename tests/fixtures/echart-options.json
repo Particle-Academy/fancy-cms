@@ -1,0 +1,23 @@
+{
+  "about": "The echart node's option validator, shared byte-for-byte with particle-academy/fancy-cms (tests/fixtures/echart-options.json). Each case is an option and the paths the validator must reject, in order; an empty list means accepted. Both validateEchartOption (TS) and EchartOption::errors (PHP) must return exactly these paths.",
+  "cases": [
+    {"name": "a bar chart with a dataset", "option": {"dataset": {"source": [["quarter", "tax"], ["Q1", 1200], ["Q2", 1450]]}, "xAxis": {"type": "category"}, "yAxis": {"type": "value"}, "series": [{"type": "bar", "encode": {"x": "quarter", "y": "tax"}}]}, "errors": []},
+    {"name": "a pie with a template formatter", "option": {"tooltip": {"trigger": "item", "formatter": "{b}: {c} ({d}%)"}, "series": {"type": "pie", "radius": ["40%", "70%"], "data": [{"name": "A", "value": 3}, {"name": "B", "value": 5}]}}, "errors": []},
+    {"name": "every allowed series type", "option": {"series": [{"type": "line"}, {"type": "bar"}, {"type": "pie"}, {"type": "scatter"}, {"type": "effectScatter"}, {"type": "radar"}, {"type": "tree"}, {"type": "treemap"}, {"type": "sunburst"}, {"type": "boxplot"}, {"type": "candlestick"}, {"type": "heatmap"}, {"type": "parallel"}, {"type": "graph"}, {"type": "sankey"}, {"type": "funnel"}, {"type": "gauge"}, {"type": "pictorialBar"}, {"type": "themeRiver"}]}, "errors": []},
+    {"name": "bindings are data slots", "option": {"xAxis": {"type": "category", "data": {"$bind": "sales.months"}}, "yAxis": {}, "series": [{"type": "line", "data": {"$bind": "sales.totals"}}]}, "errors": []},
+    {"name": "not an object", "option": [1, 2], "errors": ["$"]},
+    {"name": "an unknown top-level key", "option": {"series": [], "toolbox": {"feature": {"saveAsImage": {}}}}, "errors": ["$.toolbox"]},
+    {"name": "graphic and geo are refused", "option": {"graphic": [], "geo": {"map": "world"}}, "errors": ["$.graphic", "$.geo"]},
+    {"name": "a series type outside the list", "option": {"series": [{"type": "map"}, {"type": "lines"}, {"type": "custom"}]}, "errors": ["$.series[0].type", "$.series[1].type", "$.series[2].type"]},
+    {"name": "a series with no type", "option": {"series": [{"data": [1]}]}, "errors": ["$.series[0].type"]},
+    {"name": "markup in any string", "option": {"title": {"text": "<img src=x onerror=alert(1)>"}, "series": [{"type": "bar", "name": "a > b"}]}, "errors": ["$.title.text", "$.series[0].name"]},
+    {"name": "a formatter written as code", "option": {"tooltip": {"formatter": "function (p) { return p.name }"}, "series": [{"type": "bar", "label": {"formatter": "x => x"}}]}, "errors": ["$.tooltip.formatter", "$.series[0].label.formatter"]},
+    {"name": "a formatter that is not a string", "option": {"yAxis": {"axisLabel": {"formatter": {"$bind": "fmt"}}}}, "errors": ["$.yAxis.axisLabel.formatter"]},
+    {"name": "rich text, css and links", "option": {"title": {"text": "T", "link": "https://example.com", "sublink": "https://example.com", "textStyle": {"rich": {"a": {}}}}, "tooltip": {"extraCssText": "background:url(x)", "appendTo": "body", "className": "x"}}, "errors": ["$.title.link", "$.title.sublink", "$.title.textStyle.rich", "$.tooltip.extraCssText", "$.tooltip.appendTo", "$.tooltip.className"]},
+    {"name": "images and image symbols", "option": {"backgroundColor": {"image": "https://example.com/x.png"}, "series": [{"type": "pictorialBar", "symbol": "image://https://example.com/x.png"}, {"type": "scatter", "symbol": "path://M0 0L1 1"}]}, "errors": ["$.backgroundColor.image", "$.series[0].symbol"]},
+    {"name": "script and css urls in strings", "option": {"title": {"text": "javascript:alert(1)", "subtext": "url(https://example.com)"}}, "errors": ["$.title.text", "$.title.subtext"]},
+    {"name": "prototype keys", "option": {"series": [{"type": "bar", "__proto__x": 1, "constructor": {"a": 1}}]}, "errors": ["$.series[0].constructor"]},
+    {"name": "a binding with extra keys", "option": {"series": [{"type": "bar", "data": {"$bind": "a", "formatter": "x"}}]}, "errors": ["$.series[0].data"]},
+    {"name": "non-finite numbers cannot arrive from JSON, but nesting is capped", "option": {"series": [{"type": "bar", "data": [[[[[[[[[[[[[[1]]]]]]]]]]]]]]}]}, "errors": ["$.series[0].data[0][0][0][0][0][0][0][0][0][0]"]}
+  ]
+}

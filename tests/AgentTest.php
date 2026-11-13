@@ -48,6 +48,8 @@ final class AgentTest extends TestCase
         // 5000 held the four infographic types (4640 bytes). Page inputs and the
         // $params/$scope binding keys took it to 5913 after trimming every
         // description (2026-11-12); a sixth type should earn its bytes the same way.
-        self::assertLessThanOrEqual(6000, strlen(json_encode($islands, JSON_THROW_ON_ERROR)), 'Built-in island catalogue byte cost is a release metric.');
+        // The sixth is the echart node (CC-fancy-0035, approved 2026-11-13): trimmed
+        // to 841 bytes, its full rules live in the guidance, 6768 in all.
+        self::assertLessThanOrEqual(6800, strlen(json_encode($islands, JSON_THROW_ON_ERROR)), 'Built-in island catalogue byte cost is a release metric.');
     }
 }

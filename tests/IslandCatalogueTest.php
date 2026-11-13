@@ -29,7 +29,7 @@ final class IslandCatalogueTest extends TestCase
     public function test_the_builtins_are_the_infographic_nodes_and_page_inputs(): void
     {
         $catalogue = IslandCatalogue::builtin();
-        self::assertSame(['chart', 'kpi', 'table', 'leaderboard', 'input'], $catalogue->types());
+        self::assertSame(['chart', 'echart', 'kpi', 'table', 'leaderboard', 'input'], $catalogue->types());
         self::assertTrue($catalogue->hydrates('chart'));
         self::assertFalse($catalogue->hydrates('kpi'));
         self::assertFalse($catalogue->hydrates('text'));
@@ -40,8 +40,8 @@ final class IslandCatalogueTest extends TestCase
     {
         $base = IslandCatalogue::builtin();
         $catalogue = self::tabs();
-        self::assertSame(['chart', 'kpi', 'table', 'leaderboard', 'input'], $base->types(), 'register() returns a new catalogue');
-        self::assertSame(['chart', 'kpi', 'table', 'leaderboard', 'input', 'kit:Tabs'], $catalogue->types());
+        self::assertSame(['chart', 'echart', 'kpi', 'table', 'leaderboard', 'input'], $base->types(), 'register() returns a new catalogue');
+        self::assertSame(['chart', 'echart', 'kpi', 'table', 'leaderboard', 'input', 'kit:Tabs'], $catalogue->types());
         self::assertTrue($catalogue->hydrates('kit:Tabs'));
         $json = json_decode((string) json_encode($catalogue->toArray(), JSON_THROW_ON_ERROR), true);
         self::assertSame(['description' => 'Tabbed panels', 'hydrate' => 'eager', 'props' => self::SCHEMA, 'example' => ['tabs' => [['value' => 'a', 'label' => 'A']]]], $json['types']['kit:Tabs']);
@@ -54,7 +54,7 @@ final class IslandCatalogueTest extends TestCase
         $merged = IslandCatalogue::builtin()->merge($exported);
         self::assertSame(json_decode($exported, true), json_decode((string) json_encode($merged->toArray()), true));
         // Merging the built-ins again is idempotent, not a collision.
-        self::assertSame(['chart', 'kpi', 'table', 'leaderboard', 'input', 'kit:Tabs'], $merged->merge($exported)->types());
+        self::assertSame(['chart', 'echart', 'kpi', 'table', 'leaderboard', 'input', 'kit:Tabs'], $merged->merge($exported)->types());
     }
 
     public static function badNames(): iterable
@@ -124,6 +124,6 @@ final class IslandCatalogueTest extends TestCase
             self::assertSame('see islands.types.'.$type, $catalogue['elements'][$type]['schema']);
         }
         self::assertArrayHasKey('kit:Tabs', $catalogue['elements']);
-        self::assertSame(array_keys(Agent::describe()['islands']['types']), ['chart', 'kpi', 'table', 'leaderboard', 'input']);
+        self::assertSame(array_keys(Agent::describe()['islands']['types']), ['chart', 'echart', 'kpi', 'table', 'leaderboard', 'input']);
     }
 }

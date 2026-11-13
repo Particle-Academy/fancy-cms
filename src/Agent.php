@@ -113,6 +113,8 @@ final class Agent
                 'Motion, actions and repeater behavior require the browser runtime. PHP renders native static elements; richtext HTML is not emitted by PHP.',
                 'Changes use node:<URL-encoded id> and page:<URL-encoded doc.id> handles. Pin writes to the observed revision; after surface_changed_under_you read changes and preserve human edits.',
                 'islands lists component types as JSON Schema. Place one as a node of that type; island:true is implied. chart/kpi/table/leaderboard carry the shape and $bind the numbers from host data; never type numbers in. Missing data renders an empty state. input nodes are page inputs: a binding\'s $params or $scope value {"$input": name} takes that input\'s value.',
+                'echart draws any ECharts chart from option, a safe subset: no functions, no HTML, no links or images; formatter is a template like "{b}: {c}". Give it a title and a summary in words, and $bind its data.',
+                'Kit islands are named <package>:<Component> (react-fancy:Tabs, fancy-sheets:Spreadsheet). Props are data only; every top-level prop may be a {"$bind": path}. A type whose slot is "children" renders its child nodes (Card, Modal body, Grid): parent nodes to it. Chrome islands (Modal, Drawer, Command, Toast) bring their own trigger button labelled by label.',
             ],
             'islands' => $islands->toArray(),
         ];

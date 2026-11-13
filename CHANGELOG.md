@@ -15,6 +15,31 @@ upgrading.
 
 ## [Unreleased]
 
+**Upgrade with `@particle-academy/fancy-cms-ui` at its matching release.** Both
+now know the `echart` node and render kit islands' text fallbacks.
+
+### Added
+- `IslandCatalogue::kit()`: the built-ins plus every Fancy kit component as an
+  island (181 types, `react-fancy:Tabs` and the rest), from
+  `resources/islands/kit-catalogue.json`, which fancy-cms-ui generates from the
+  components' prop types and ships byte-identical. Pass it to
+  `Agent::describe()` and `PageRenderer::render()` in a host that renders with
+  fancy-cms-ui's `./kit` islands.
+- Kit islands render on the server: their text fallback (`Render\TextFallback`)
+  and, for a container island (`slot: "children"`), their child nodes. Same
+  bytes as React (tests/fixtures/kit-islands.json).
+- **The `echart` node** (CC-fancy-0035): a built-in node type whose `option` must
+  pass `Render\EchartOption`, the same safe subset as fancy-cms-ui's validator
+  (shared fixture tests/fixtures/echart-options.json). A document whose option
+  carries a function-like formatter, markup, a link, an image or an unlisted
+  key fails validation. The server renders its caption and summary.
+- Agent guidance for echart and for kit islands.
+- Island descriptors keep `package`, `slot` and `textFallback`.
+
+### Changed
+- The built-in island catalogue budget moves from 6000 to 6800 bytes for the
+  echart node (trimmed to 841 bytes; its rules live in the guidance).
+
 ## [0.9.1] - 2026-11-13
 
 **Upgrade `fancy-cms` and `@particle-academy/fancy-cms-ui` together, to 0.9.1
