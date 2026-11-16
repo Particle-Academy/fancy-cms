@@ -41,7 +41,7 @@ key on other node types.
 > — every discovery helps.
 
 The Laravel host for **fancy-cms** — an extendable inline-WYSIWYG website +
-app-shell builder built on the Fancy UI suite. This package owns the **PHP
+app-shell builder built on the Fancy Dev Kit. This package owns the **PHP
 renderer** (node tree → HTML + compiled CSS + island placeholders), and — in
 later phases — persistence, the file API on any disk, and publish routing.
 
@@ -355,7 +355,7 @@ MIT © Particle Academy
 
 ---
 
-## ⭐ Star Fancy UI
+## ⭐ Star Fancy Dev Kit
 
 If this package is useful to you, a quick ⭐ on the repo really helps us build a better kit. Thank you!
 

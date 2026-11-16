@@ -39,6 +39,7 @@ now know the `echart` node and render kit islands' text fallbacks.
 ### Changed
 - The built-in island catalogue budget moves from 6000 to 6800 bytes for the
   echart node (trimmed to 841 bytes; its rules live in the guidance).
+- Rebranded the display name to Fancy Dev Kit (README and package description). Package names, the npm scope, URLs and the `fancy-ui` MCP id are unchanged.
 
 ## [0.9.1] - 2026-11-13
 
