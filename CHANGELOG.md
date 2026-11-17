@@ -40,6 +40,7 @@ now know the `echart` node and render kit islands' text fallbacks.
 - The built-in island catalogue budget moves from 6000 to 6800 bytes for the
   echart node (trimmed to 841 bytes; its rules live in the guidance).
 - Rebranded the display name to Fancy Dev Kit (README and package description). Package names, the npm scope, URLs and the `fancy-ui` MCP id are unchanged.
+- **Docs:** `AGENTS.md` is now the guide to using this package (install, its entries on the Fancy MCP catalog server, API essentials, traps). The contributor notes moved to `CONTRIBUTING.md`, and `CLAUDE.md` is now a symlink to it. The README points to the MCP server and to `AGENTS.md`. No code changed; nothing to do.
 
 ## [0.9.1] - 2026-11-13
 
