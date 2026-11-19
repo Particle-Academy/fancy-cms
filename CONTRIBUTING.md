@@ -8,7 +8,7 @@ works in this repo.
 ## Test
 
 ```sh
-composer test   # phpunit; the suite lives in tests/
+composer test   # Pest; the suite lives in tests/
 ```
 
 Update `CHANGELOG.md` in the same commit as the change.

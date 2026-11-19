@@ -37,4 +37,23 @@ final class PageFixtures
             'reorder_roots' => ['t' => 'reorder_roots', 'order' => ['b', 'a']],
         ];
     }
+
+    /**
+     * A decoded document holding these node objects (as the parity fixtures
+     * decode them), for tests outside the parity files that need one.
+     *
+     * @param  list<object>  $nodes
+     */
+    public static function decodedDoc(array $nodes): array
+    {
+        $map = new \stdClass;
+        foreach ($nodes as $node) {
+            $map->{$node->id} = $node;
+        }
+
+        return \FancyCms\Document\PageJson::decodeDocument((string) json_encode([
+            'id' => 'ig', 'seq' => 0, 'meta' => ['title' => 'Infographics', 'slug' => '/', 'scrollMode' => 'smooth'],
+            'theme' => ['name' => 'default'], 'breakpoints' => ['base', 'md', 'lg'], 'nodes' => $map,
+        ], JSON_THROW_ON_ERROR));
+    }
 }

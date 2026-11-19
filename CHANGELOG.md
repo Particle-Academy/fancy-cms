@@ -37,6 +37,9 @@ now know the `echart` node and render kit islands' text fallbacks.
 - Island descriptors keep `package`, `slot` and `textFallback`.
 
 ### Changed
+- Tests moved to Pest (`pestphp/pest` `^5.0`); `phpunit/phpunit` removed from
+  `require-dev` (Pest brings it transitively) and CI runs `vendor/bin/pest`.
+  No runtime change; nothing to do.
 - The built-in island catalogue budget moves from 6000 to 6800 bytes for the
   echart node (trimmed to 841 bytes; its rules live in the guidance).
 - Rebranded the display name to Fancy Dev Kit (README and package description). Package names, the npm scope, URLs and the `fancy-ui` MCP id are unchanged.
